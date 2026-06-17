@@ -1,0 +1,41 @@
+<h1>ReAct: Synergizing Reasoning and Acting in Language Models</h1>
+
+<p><span class="tag">经典</span> <span class="tag tag-blue">ICLR 2023</span> <span class="tag tag-green">必读</span></p>
+
+<p><strong>作者</strong>: Shunyu Yao et al. (Princeton)<br>
+<strong>链接</strong>: <a href="https://arxiv.org/abs/2210.03629">arXiv:2210.03629</a></p>
+
+<h2>核心贡献</h2>
+
+<p>提出 <strong>ReAct (Reasoning + Acting)</strong> 范式，将推理轨迹与行动步骤交织在一起，让 LLM 交替进行：</p>
+
+<pre><code>思考 (Thought) → 行动 (Action) → 观察 (Observation) → 思考 → ...</code></pre>
+
+<h2>为什么重要</h2>
+
+<ul>
+<li>几乎所有现代 Agent 框架（LangGraph、AutoGen、CrewAI 等）都基于 ReAct</li>
+<li>解决了纯推理（CoT）无法与环境交互、纯行动无法推理的问题</li>
+</ul>
+
+<h2>关键发现</h2>
+
+<table>
+<tr><th>范式</th><th>优势</th><th>劣势</th></tr>
+<tr><td>CoT (只推理)</td><td>逻辑连贯</td><td>无法获取外部信息</td></tr>
+<tr><td>Act (只行动)</td><td>能与环境交互</td><td>缺乏推理规划</td></tr>
+<tr><td><strong>ReAct (推理+行动)</strong></td><td><strong>两者兼顾</strong></td><td>需要更多 Token</td></tr>
+</table>
+
+<blockquote>
+<p>这是 AI Agent 领域<strong>必须精读</strong>的论文。理解 ReAct 循环是理解所有现代 Agent 的基础。</p>
+</blockquote>
+
+<h2>Workflow 模式对比</h2>
+
+<div class="info-box">
+<div class="info-box-title">💡 ReAct 在不同框架中的实现</div>
+<p>LangGraph: <code>StateGraph</code> 中的 AgentExecutor<br>
+AutoGen: <code>AssistantAgent</code> 的默认对话循环<br>
+OpenAI SDK: <code>Agent.run()</code> 的内置循环</p>
+</div>

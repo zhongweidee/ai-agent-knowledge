@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>框架对比与选型指南 - AI Agent 知识库</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif; color:#333; line-height:1.6; background:#f5f5f5; }
+.layout { display:flex; min-height:100vh; }
+.sidebar { width:280px; background:#1a1a2e; color:#ccc; padding:0 0 20px 0; position:fixed; top:0; left:0; height:100vh; overflow-y:auto; flex-shrink:0; }
+.sidebar-header { padding:16px 20px 8px; border-bottom:1px solid #333; margin-bottom:8px; }
+.sidebar-header h2 { color:#e94560; font-size:16px; display:inline; }
+.sidebar-header a { color:#e94560; text-decoration:none; }
+.sidebar-tools { display:inline; float:right; }
+.sidebar-tools button { background:none; border:1px solid #555; color:#aaa; cursor:pointer; padding:0 7px; margin-left:3px; border-radius:3px; font-size:16px; font-weight:700; line-height:1.3; font-family:monospace; }
+.sidebar-tools button:hover { background:#333; color:#fff; }
+.sidebar-section { border-bottom:1px solid #222; }
+.sidebar-section-title { color:#e0e0e0; font-weight:600; font-size:12.5px; padding:8px 20px; cursor:pointer; user-select:none; display:flex; justify-content:space-between; align-items:center; text-transform:uppercase; letter-spacing:0.5px; }
+.sidebar-section-title:hover { background:#222; }
+.sidebar-section-title .toggle { color:#666; font-size:10px; transition:transform 0.2s; }
+.sidebar-section-title.collapsed .toggle { transform:rotate(-90deg); }
+.sidebar-section-content { overflow:hidden; transition:max-height 0.2s ease; }
+.sidebar-section-content.collapsed { max-height:0 !important; }
+.sidebar a { color:#9ba3b4; text-decoration:none; font-size:12.5px; display:block; padding:3px 20px 3px 28px; }
+.sidebar a:hover { color:#e94560; background:#222; }
+.sidebar a.active { color:#e94560; font-weight:500; background:#222; }
+.sidebar-group-label { color:#888; font-size:11px; padding:6px 20px 2px 24px; text-transform:uppercase; letter-spacing:0.3px; }
+.content { margin-left:280px; flex:1; max-width:960px; padding:40px 60px; background:#fff; min-height:100vh; }
+.content h1 { font-size:32px; font-weight:700; margin-bottom:20px; padding-bottom:12px; border-bottom:3px solid #e94560; color:#1a1a1a; }
+.content h2 { font-size:24px; font-weight:600; margin:32px 0 12px; color:#1a1a1a; border-bottom:1px solid #eee; padding-bottom:6px; }
+.content h3 { font-size:20px; font-weight:600; margin:24px 0 10px; color:#2a2a2a; }
+.content h4 { font-size:16px; font-weight:600; margin:20px 0 8px; }
+.content p { margin:0 0 14px; font-size:15px; }
+.content a { color:#0078d4; text-decoration:none; }
+.content a:hover { text-decoration:underline; }
+.content code { font-family:'Cascadia Code','Fira Code','Consolas',monospace; background:#f0f0f0; padding:2px 6px; border-radius:3px; font-size:13px; }
+.content pre { background:#1e1e1e; color:#d4d4d4; padding:16px; border-radius:6px; overflow-x:auto; margin:14px 0; }
+.content pre code { background:none; padding:0; color:inherit; font-size:13px; line-height:1.5; }
+.content table { border-collapse:collapse; margin:14px 0; width:100%; font-size:14px; }
+.content th, .content td { border:1px solid #ddd; padding:8px 12px; text-align:left; }
+.content th { background:#f8f8f8; font-weight:600; }
+.content tr:nth-child(even) td { background:#fafafa; }
+.content blockquote { border-left:4px solid #e94560; padding:8px 16px; margin:14px 0; background:#fef0f3; border-radius:0 4px 4px 0; }
+.content blockquote p { margin:0; }
+.content img { max-width:100%; border-radius:4px; margin:14px 0; border:1px solid #e0e0e0; }
+.content hr { border:none; border-top:1px solid #eee; margin:24px 0; }
+.content ul, .content ol { margin:0 0 14px; padding-left:24px; font-size:15px; }
+.content li { margin-bottom:4px; }
+.content .tag { display:inline-block; background:#e94560; color:#fff; font-size:11px; padding:2px 8px; border-radius:3px; margin-right:4px; }
+.content .tag-blue { background:#0078d4; }
+.content .tag-green { background:#28a745; }
+.content .info-box { background:#f0f7ff; border:1px solid #0078d4; border-radius:6px; padding:16px; margin:14px 0; }
+.content .info-box-title { font-weight:600; color:#0078d4; margin-bottom:6px; }
+@media (max-width:768px) { .sidebar { display:none; } .content { margin-left:0; padding:20px; } }
+</style>
+</head>
+<body>
+<div class="layout">
+  <div class="sidebar"><div class="sidebar-header"><h2><a href="../index.html">🤖 AI Agent 知识库</a></h2>
+<div class="sidebar-tools"><button onclick="toggleAll(true)" title="展开">+</button><button onclick="toggleAll(false)" title="折叠">−</button></div></div>
+<div class="sidebar-section"><div class="sidebar-section-title" onclick="ts('s-papers')"><span>Papers</span><span class="toggle">▼</span></div><div id="s-papers" class="sidebar-section-content"><div class="sidebar-group-label">综述</div>
+<a href="../papers/surveys/li-agent-ai-survey.html" class="">李飞飞 Agent AI 综述</a>
+<div class="sidebar-group-label">经典论文</div>
+<a href="../papers/classics/react.html" class="">ReAct: Reasoning + Acting</a>
+<a href="../papers/classics/generative-agents.html" class="">Generative Agents (AI小镇)</a>
+</div></div>
+<div class="sidebar-section"><div class="sidebar-section-title" onclick="ts('s-frameworks')"><span>Frameworks</span><span class="toggle">▼</span></div><div id="s-frameworks" class="sidebar-section-content"><a href="../frameworks/comparison.html" class="active">框架对比与选型指南</a>
+</div></div>
+<div class="sidebar-section"><div class="sidebar-section-title" onclick="ts('s-tutorials')"><span>Tutorials</span><span class="toggle">▼</span></div><div id="s-tutorials" class="sidebar-section-content"><a href="../tutorials/building-effective-agents.html" class="">Building Effective Agents</a>
+</div></div>
+<div class="sidebar-section"><div class="sidebar-section-title" onclick="ts('s-glossary')"><span>Glossary</span><span class="toggle">▼</span></div><div id="s-glossary" class="sidebar-section-content"><a href="../glossary/glossary.html" class="">术语表</a>
+</div></div>
+<div class="sidebar-section"><div class="sidebar-section-title" onclick="ts('s-resources')"><span>Resources</span><span class="toggle">▼</span></div><div id="s-resources" class="sidebar-section-content"><a href="../references/learning-path.html" class="">学习路线</a>
+</div></div>
+</div>
+  <div class="content">
+    <div class="breadcrumb"><a href="../index.html">首页</a></div>
+<h1>框架对比与选型指南</h1>
+
+<p><span class="tag">框架</span> <span class="tag tag-blue">2025</span></p>
+
+<h2>速览</h2>
+
+<table>
+<tr><th>框架</th><th>发布方</th><th>最佳场景</th><th>语言</th></tr>
+<tr><td><strong>OpenAI Agents SDK</strong></td><td>OpenAI</td><td>生产级单/多 Agent</td><td>Py/JS</td></tr>
+<tr><td><strong>LangGraph</strong></td><td>LangChain</td><td>有状态、复杂分支图</td><td>Py/JS</td></tr>
+<tr><td><strong>CrewAI</strong></td><td>CrewAI</td><td>角色分工团队</td><td>Py</td></tr>
+<tr><td><strong>AutoGen (AG2)</strong></td><td>Microsoft</td><td>事件驱动多 Agent</td><td>Py</td></tr>
+<tr><td><strong>LlamaIndex Workflows</strong></td><td>LlamaIndex</td><td>数据密集型/RAG</td><td>Py/TS</td></tr>
+<tr><td><strong>Pydantic AI</strong></td><td>Pydantic</td><td>类型安全</td><td>Py</td></tr>
+<tr><td><strong>Smolagents</strong></td><td>HuggingFace</td><td>轻量实验</td><td>Py</td></tr>
+<tr><td><strong>Vercel AI SDK</strong></td><td>Vercel</td><td>Next.js 应用层</td><td>TS/JS</td></tr>
+</table>
+
+<h2>选型决策树</h2>
+
+<pre><code>需要可视化 Agent Builder？
+├── 是 → OpenAI Agents SDK
+└── 否
+    ├── 需要精细图控制？ → LangGraph
+    ├── 角色分工明确？ → CrewAI
+    ├── 数据/RAG 密集型？ → LlamaIndex
+    ├── 类型安全优先？ → Pydantic AI
+    ├── 事件驱动多 Agent？ → AutoGen
+    └── Next.js 项目？ → Vercel AI SDK</code></pre>
+
+<h2>详细分析</h2>
+
+<h3>OpenAI Agents SDK</h3>
+<ul>
+<li><strong>核心概念</strong>: Agent + Handoff + Guardrails</li>
+<li><strong>亮点</strong>: 可视化 Agent Builder、内置 Eval 系统</li>
+<li><strong>适合</strong>: 想快速上生产、不走弯路</li>
+</ul>
+
+<h3>LangGraph</h3>
+<ul>
+<li><strong>核心概念</strong>: StateGraph + Node + Edge</li>
+<li><strong>亮点</strong>: 状态管理、分支控制、Human-in-the-loop</li>
+<li><strong>适合</strong>: 需要精细控制执行流程的复杂应用</li>
+</ul>
+
+<h3>CrewAI</h3>
+<ul>
+<li><strong>核心概念</strong>: Agent + Task + Crew + Process</li>
+<li><strong>亮点</strong>: 角色定义直觉、Sequential/Hierarchical 流程</li>
+<li><strong>适合</strong>: 团队协作模拟、内容生成流程</li>
+</ul>
+
+<h3>AutoGen / AG2</h3>
+<ul>
+<li><strong>核心概念</strong>: Agent + Chat + Tool</li>
+<li><strong>亮点</strong>: 代码生成与执行、多 Agent 辩论</li>
+<li><strong>适合</strong>: 多 Agent 对话、代码任务</li>
+</ul>
+  </div>
+</div>
+<script>function ts(id){var e=document.getElementById(id),t=e.previousElementSibling;e.classList.contains("collapsed")?(e.classList.remove("collapsed"),t.classList.remove("collapsed")):(e.classList.add("collapsed"),t.classList.add("collapsed"))}function toggleAll(v){document.querySelectorAll(".sidebar-section-content").forEach(function(e){v?e.classList.remove("collapsed"):e.classList.add("collapsed")});document.querySelectorAll(".sidebar-section-title").forEach(function(e){v?e.classList.remove("collapsed"):e.classList.add("collapsed")})}</script>
+</body>
+</html>

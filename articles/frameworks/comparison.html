@@ -1,0 +1,59 @@
+<h1>框架对比与选型指南</h1>
+
+<p><span class="tag">框架</span> <span class="tag tag-blue">2025</span></p>
+
+<h2>速览</h2>
+
+<table>
+<tr><th>框架</th><th>发布方</th><th>最佳场景</th><th>语言</th></tr>
+<tr><td><strong>OpenAI Agents SDK</strong></td><td>OpenAI</td><td>生产级单/多 Agent</td><td>Py/JS</td></tr>
+<tr><td><strong>LangGraph</strong></td><td>LangChain</td><td>有状态、复杂分支图</td><td>Py/JS</td></tr>
+<tr><td><strong>CrewAI</strong></td><td>CrewAI</td><td>角色分工团队</td><td>Py</td></tr>
+<tr><td><strong>AutoGen (AG2)</strong></td><td>Microsoft</td><td>事件驱动多 Agent</td><td>Py</td></tr>
+<tr><td><strong>LlamaIndex Workflows</strong></td><td>LlamaIndex</td><td>数据密集型/RAG</td><td>Py/TS</td></tr>
+<tr><td><strong>Pydantic AI</strong></td><td>Pydantic</td><td>类型安全</td><td>Py</td></tr>
+<tr><td><strong>Smolagents</strong></td><td>HuggingFace</td><td>轻量实验</td><td>Py</td></tr>
+<tr><td><strong>Vercel AI SDK</strong></td><td>Vercel</td><td>Next.js 应用层</td><td>TS/JS</td></tr>
+</table>
+
+<h2>选型决策树</h2>
+
+<pre><code>需要可视化 Agent Builder？
+├── 是 → OpenAI Agents SDK
+└── 否
+    ├── 需要精细图控制？ → LangGraph
+    ├── 角色分工明确？ → CrewAI
+    ├── 数据/RAG 密集型？ → LlamaIndex
+    ├── 类型安全优先？ → Pydantic AI
+    ├── 事件驱动多 Agent？ → AutoGen
+    └── Next.js 项目？ → Vercel AI SDK</code></pre>
+
+<h2>详细分析</h2>
+
+<h3>OpenAI Agents SDK</h3>
+<ul>
+<li><strong>核心概念</strong>: Agent + Handoff + Guardrails</li>
+<li><strong>亮点</strong>: 可视化 Agent Builder、内置 Eval 系统</li>
+<li><strong>适合</strong>: 想快速上生产、不走弯路</li>
+</ul>
+
+<h3>LangGraph</h3>
+<ul>
+<li><strong>核心概念</strong>: StateGraph + Node + Edge</li>
+<li><strong>亮点</strong>: 状态管理、分支控制、Human-in-the-loop</li>
+<li><strong>适合</strong>: 需要精细控制执行流程的复杂应用</li>
+</ul>
+
+<h3>CrewAI</h3>
+<ul>
+<li><strong>核心概念</strong>: Agent + Task + Crew + Process</li>
+<li><strong>亮点</strong>: 角色定义直觉、Sequential/Hierarchical 流程</li>
+<li><strong>适合</strong>: 团队协作模拟、内容生成流程</li>
+</ul>
+
+<h3>AutoGen / AG2</h3>
+<ul>
+<li><strong>核心概念</strong>: Agent + Chat + Tool</li>
+<li><strong>亮点</strong>: 代码生成与执行、多 Agent 辩论</li>
+<li><strong>适合</strong>: 多 Agent 对话、代码任务</li>
+</ul>

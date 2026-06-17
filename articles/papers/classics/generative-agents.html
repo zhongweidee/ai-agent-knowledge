@@ -1,0 +1,41 @@
+<h1>Generative Agents: Interactive Simulacra of Human Behavior</h1>
+
+<p><span class="tag">经典</span> <span class="tag tag-blue">ICLR 2023</span> <span class="tag tag-green">多智能体</span></p>
+
+<p><strong>作者</strong>: Joon Sung Park et al. (Stanford)<br>
+<strong>链接</strong>: <a href="https://arxiv.org/abs/2304.03442">arXiv:2304.03442</a></p>
+
+<h2>核心贡献</h2>
+
+<p>创建了 <strong>斯坦福 AI 小镇</strong>——25 个 AI Agent 在一个数字小镇中自主生活，展现出类人社会行为：</p>
+
+<ul>
+<li>Agent 会<strong>起床、做早餐、上班、聊天、约会</strong></li>
+<li>信息通过 Agent 之间的对话<strong>自然传播</strong></li>
+<li>没有脚本，全靠 Agent 自主决策</li>
+</ul>
+
+<h2>架构三组件</h2>
+
+<table>
+<tr><th>组件</th><th>说明</th></tr>
+<tr><td><strong>记忆流 (Memory Stream)</strong></td><td>所有经历的时间线，按重要性、相关性、近因性检索</td></tr>
+<tr><td><strong>反思 (Reflection)</strong></td><td>定期将记忆抽象为更高层的洞察</td></tr>
+<tr><td><strong>规划 (Planning)</strong></td><td>基于角色和记忆生成日常计划</td></tr>
+</table>
+
+<h2>记忆检索公式</h2>
+
+<p>检索分数 = 近因性(Recency) × 重要性(Importance) × 相关性(Relevance)</p>
+
+<blockquote>
+<p>这篇论文证明了"Agent 交互可以产生超越单 Agent 能力的涌现行为"。记忆流的设计尤其值得学习——如何在不同抽象层次管理记忆。</p>
+</blockquote>
+
+<h2>后续影响</h2>
+
+<ul>
+<li>开创了<strong>多 Agent 社会模拟</strong>研究范式</li>
+<li>记忆流+反思+规划的架构被后续大量工作沿用</li>
+<li>启发了 ChatGPT 的 Memory 功能</li>
+</ul>

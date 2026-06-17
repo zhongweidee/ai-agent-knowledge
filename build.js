@@ -1,0 +1,166 @@
+const fs = require('fs');
+const path = require('path');
+
+const ROOT = __dirname;
+const ARTICLES = path.join(ROOT, 'articles');
+const OUT = ROOT;
+
+const CSS = `
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif; color:#333; line-height:1.6; background:#f5f5f5; }
+.layout { display:flex; min-height:100vh; }
+.sidebar { width:280px; background:#1a1a2e; color:#ccc; padding:0 0 20px 0; position:fixed; top:0; left:0; height:100vh; overflow-y:auto; flex-shrink:0; }
+.sidebar-header { padding:16px 20px 8px; border-bottom:1px solid #333; margin-bottom:8px; }
+.sidebar-header h2 { color:#e94560; font-size:16px; display:inline; }
+.sidebar-header a { color:#e94560; text-decoration:none; }
+.sidebar-tools { display:inline; float:right; }
+.sidebar-tools button { background:none; border:1px solid #555; color:#aaa; cursor:pointer; padding:0 7px; margin-left:3px; border-radius:3px; font-size:16px; font-weight:700; line-height:1.3; font-family:monospace; }
+.sidebar-tools button:hover { background:#333; color:#fff; }
+.sidebar-section { border-bottom:1px solid #222; }
+.sidebar-section-title { color:#e0e0e0; font-weight:600; font-size:12.5px; padding:8px 20px; cursor:pointer; user-select:none; display:flex; justify-content:space-between; align-items:center; text-transform:uppercase; letter-spacing:0.5px; }
+.sidebar-section-title:hover { background:#222; }
+.sidebar-section-title .toggle { color:#666; font-size:10px; transition:transform 0.2s; }
+.sidebar-section-title.collapsed .toggle { transform:rotate(-90deg); }
+.sidebar-section-content { overflow:hidden; transition:max-height 0.2s ease; }
+.sidebar-section-content.collapsed { max-height:0 !important; }
+.sidebar a { color:#9ba3b4; text-decoration:none; font-size:12.5px; display:block; padding:3px 20px 3px 28px; }
+.sidebar a:hover { color:#e94560; background:#222; }
+.sidebar a.active { color:#e94560; font-weight:500; background:#222; }
+.sidebar-group-label { color:#888; font-size:11px; padding:6px 20px 2px 24px; text-transform:uppercase; letter-spacing:0.3px; }
+.content { margin-left:280px; flex:1; max-width:960px; padding:40px 60px; background:#fff; min-height:100vh; }
+.content h1 { font-size:32px; font-weight:700; margin-bottom:20px; padding-bottom:12px; border-bottom:3px solid #e94560; color:#1a1a1a; }
+.content h2 { font-size:24px; font-weight:600; margin:32px 0 12px; color:#1a1a1a; border-bottom:1px solid #eee; padding-bottom:6px; }
+.content h3 { font-size:20px; font-weight:600; margin:24px 0 10px; color:#2a2a2a; }
+.content h4 { font-size:16px; font-weight:600; margin:20px 0 8px; }
+.content p { margin:0 0 14px; font-size:15px; }
+.content a { color:#0078d4; text-decoration:none; }
+.content a:hover { text-decoration:underline; }
+.content code { font-family:'Cascadia Code','Fira Code','Consolas',monospace; background:#f0f0f0; padding:2px 6px; border-radius:3px; font-size:13px; }
+.content pre { background:#1e1e1e; color:#d4d4d4; padding:16px; border-radius:6px; overflow-x:auto; margin:14px 0; }
+.content pre code { background:none; padding:0; color:inherit; font-size:13px; line-height:1.5; }
+.content table { border-collapse:collapse; margin:14px 0; width:100%; font-size:14px; }
+.content th, .content td { border:1px solid #ddd; padding:8px 12px; text-align:left; }
+.content th { background:#f8f8f8; font-weight:600; }
+.content tr:nth-child(even) td { background:#fafafa; }
+.content blockquote { border-left:4px solid #e94560; padding:8px 16px; margin:14px 0; background:#fef0f3; border-radius:0 4px 4px 0; }
+.content blockquote p { margin:0; }
+.content img { max-width:100%; border-radius:4px; margin:14px 0; border:1px solid #e0e0e0; }
+.content hr { border:none; border-top:1px solid #eee; margin:24px 0; }
+.content ul, .content ol { margin:0 0 14px; padding-left:24px; font-size:15px; }
+.content li { margin-bottom:4px; }
+.content .tag { display:inline-block; background:#e94560; color:#fff; font-size:11px; padding:2px 8px; border-radius:3px; margin-right:4px; }
+.content .tag-blue { background:#0078d4; }
+.content .tag-green { background:#28a745; }
+.content .info-box { background:#f0f7ff; border:1px solid #0078d4; border-radius:6px; padding:16px; margin:14px 0; }
+.content .info-box-title { font-weight:600; color:#0078d4; margin-bottom:6px; }
+@media (max-width:768px) { .sidebar { display:none; } .content { margin-left:0; padding:20px; } }
+`;
+
+// ============================================================
+// SITE CONFIGURATION
+// ============================================================
+const SECTIONS = [
+  { name: 'Papers', items: [
+    { type: 'group', name: '综述' },
+    { type: 'link', name: '李飞飞 Agent AI 综述', file: 'papers/surveys/li-agent-ai-survey.html' },
+    { type: 'group', name: '经典论文' },
+    { type: 'link', name: 'ReAct: Reasoning + Acting', file: 'papers/classics/react.html' },
+    { type: 'link', name: 'Generative Agents (AI小镇)', file: 'papers/classics/generative-agents.html' },
+  ]},
+  { name: 'Frameworks', items: [
+    { type: 'link', name: '框架对比与选型指南', file: 'frameworks/comparison.html' },
+  ]},
+  { name: 'Tutorials', items: [
+    { type: 'link', name: 'Building Effective Agents', file: 'tutorials/building-effective-agents.html' },
+  ]},
+  { name: 'Glossary', items: [
+    { type: 'link', name: '术语表', file: 'glossary/glossary.html' },
+  ]},
+  { name: 'Resources', items: [
+    { type: 'link', name: '学习路线', file: 'references/learning-path.html' },
+  ]},
+];
+
+// ============================================================
+// TEMPLATES
+// ============================================================
+function sidebarHtml(secs, activeFile, depth) {
+  var p = ''; for (var d = 0; d < depth; d++) p += '../';
+  var h = '<div class="sidebar-header"><h2><a href="' + p + 'index.html">🤖 AI Agent 知识库</a></h2>\n';
+  h += '<div class="sidebar-tools"><button onclick="toggleAll(true)" title="展开">+</button><button onclick="toggleAll(false)" title="折叠">−</button></div></div>\n';
+  secs.forEach(function(s) {
+    var id = 's-' + s.name.replace(/[^a-z0-9_-]/gi, '-').toLowerCase();
+    h += '<div class="sidebar-section"><div class="sidebar-section-title" onclick="ts(\'' + id + '\')"><span>' + s.name + '</span><span class="toggle">▼</span></div><div id="' + id + '" class="sidebar-section-content">';
+    s.items.forEach(function(n) {
+      if (n.type === 'link') {
+        h += '<a href="' + p + n.file + '" class="' + (n.file === activeFile ? 'active' : '') + '">' + n.name + '</a>\n';
+      } else if (n.type === 'group') {
+        h += '<div class="sidebar-group-label">' + n.name + '</div>\n';
+      }
+    });
+    h += '</div></div>\n';
+  });
+  return h;
+}
+
+function pageHtml(sidebar, title, body, depth) {
+  var p = ''; for (var d = 0; d < depth; d++) p += '../';
+  return '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>' + escHtml(title) + ' - AI Agent 知识库</title>\n<style>' + CSS + '</style>\n</head>\n<body>\n<div class="layout">\n  <div class="sidebar">' + sidebar + '</div>\n  <div class="content">\n    <div class="breadcrumb"><a href="' + p + 'index.html">首页</a></div>\n' + body + '\n  </div>\n</div>\n<script>function ts(id){var e=document.getElementById(id),t=e.previousElementSibling;e.classList.contains("collapsed")?(e.classList.remove("collapsed"),t.classList.remove("collapsed")):(e.classList.add("collapsed"),t.classList.add("collapsed"))}function toggleAll(v){document.querySelectorAll(".sidebar-section-content").forEach(function(e){v?e.classList.remove("collapsed"):e.classList.add("collapsed")});document.querySelectorAll(".sidebar-section-title").forEach(function(e){v?e.classList.remove("collapsed"):e.classList.add("collapsed")})}<\/script>\n</body>\n</html>';
+}
+
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// Home page
+function genIndex(secs) {
+  var sb = sidebarHtml(secs, '', 0);
+  var list = '';
+  secs.forEach(function(s) {
+    list += '<li><strong>' + s.name + '</strong><ul>';
+    s.items.forEach(function(n) {
+      if (n.type === 'link') list += '<li><a href="' + n.file + '">' + n.name + '</a></li>\n';
+      else if (n.type === 'group') { /* skip in listing */ }
+    });
+    list += '</ul></li>\n';
+  });
+  return pageHtml(sb, 'AI Agent 知识库',
+    '<h1>🤖 AI Agent 知识库</h1>\n' +
+    '<p>从理论到实践的 AI Agent 知识体系，涵盖论文、框架、教程和资源。</p>\n' +
+    '<div class="info-box"><div class="info-box-title">📖 快速开始</div>\n' +
+    '<p>推荐阅读顺序：<strong>李飞飞综述</strong> → <strong>ReAct</strong> → <strong>Building Effective Agents</strong></p></div>\n' +
+    '<h2>目录</h2>\n<ul>\n' + list + '</ul>\n', 0);
+}
+
+// ============================================================
+// BUILD
+// ============================================================
+console.log('Building AI Agent Knowledge Base...\n');
+
+// Generate index
+fs.writeFileSync(path.join(OUT, 'index.html'), genIndex(SECTIONS), 'utf-8');
+console.log('✅ index.html');
+
+// Generate article pages
+var count = 0;
+SECTIONS.forEach(function(s) {
+  s.items.forEach(function(n) {
+    if (n.type !== 'link') return;
+    var srcPath = path.join(ARTICLES, n.file);
+    if (!fs.existsSync(srcPath)) {
+      console.log('⚠️  Missing: ' + n.file);
+      return;
+    }
+    var body = fs.readFileSync(srcPath, 'utf-8').trim();
+    // Extract title from h1
+    var titleMatch = body.match(/<h1[^>]*>([^<]+)<\/h1>/);
+    var title = titleMatch ? titleMatch[1] : n.name;
+    var depth = n.file.split('/').length - 1;
+    var sb = sidebarHtml(SECTIONS, n.file, depth);
+    var outPath = path.join(OUT, n.file);
+    if (!fs.existsSync(path.dirname(outPath))) fs.mkdirSync(path.dirname(outPath), { recursive: true });
+    fs.writeFileSync(outPath, pageHtml(sb, title, body, depth), 'utf-8');
+    count++;
+    console.log('✅ ' + n.file);
+  });
+});
+
+console.log('\nDone! ' + count + ' pages generated.');
