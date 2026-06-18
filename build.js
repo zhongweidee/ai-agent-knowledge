@@ -53,6 +53,12 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubu
 .content .tag-green { background:#28a745; }
 .content .info-box { background:#f0f7ff; border:1px solid #0078d4; border-radius:6px; padding:16px; margin:14px 0; }
 .content .info-box-title { font-weight:600; color:#0078d4; margin-bottom:6px; }
+.content img { cursor:zoom-in; transition:opacity 0.2s; }
+.content img:hover { opacity:0.85; }
+.lightbox { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; cursor:zoom-out; justify-content:center; align-items:center; }
+.lightbox.show { display:flex; }
+.lightbox img { max-width:95%; max-height:95%; object-fit:contain; cursor:zoom-out; border:none; border-radius:0; box-shadow:0 0 30px rgba(0,0,0,0.5); }
+.lightbox-close { position:fixed; top:16px; right:24px; color:#fff; font-size:36px; cursor:pointer; z-index:10000; line-height:1; }
 @media (max-width:768px) { .sidebar { display:none; } .content { margin-left:0; padding:20px; } }
 `;
 
@@ -107,7 +113,7 @@ function sidebarHtml(secs, activeFile, depth) {
 
 function pageHtml(sidebar, title, body, depth) {
   var p = ''; for (var d = 0; d < depth; d++) p += '../';
-  return '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>' + escHtml(title) + ' - AI Agent 知识库</title>\n<style>' + CSS + '</style>\n</head>\n<body>\n<div class="layout">\n  <div class="sidebar">' + sidebar + '</div>\n  <div class="content">\n    <div class="breadcrumb"><a href="' + p + 'index.html">首页</a></div>\n' + body + '\n  </div>\n</div>\n<script>function ts(id){var e=document.getElementById(id),t=e.previousElementSibling;e.classList.contains("collapsed")?(e.classList.remove("collapsed"),t.classList.remove("collapsed")):(e.classList.add("collapsed"),t.classList.add("collapsed"))}function toggleAll(v){document.querySelectorAll(".sidebar-section-content").forEach(function(e){v?e.classList.remove("collapsed"):e.classList.add("collapsed")});document.querySelectorAll(".sidebar-section-title").forEach(function(e){v?e.classList.remove("collapsed"):e.classList.add("collapsed")})}<\/script>\n</body>\n</html>';
+  return '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>' + escHtml(title) + ' - AI Agent 知识库</title>\n<style>' + CSS + '</style>\n</head>\n<body>\n<div class="layout">\n  <div class="sidebar">' + sidebar + '</div>\n  <div class="content">\n    <div class="breadcrumb"><a href="' + p + 'index.html">首页</a></div>\n' + body + '\n  </div>\n</div>\n<div class="lightbox" id="lightbox" onclick="hideLightbox()"><span class="lightbox-close">&times;</span><img id="lightbox-img" src=""></div>\n<script>function ts(id){var e=document.getElementById(id),t=e.previousElementSibling;e.classList.contains("collapsed")?(e.classList.remove("collapsed"),t.classList.remove("collapsed")):(e.classList.add("collapsed"),t.classList.add("collapsed"))}function toggleAll(v){document.querySelectorAll(".sidebar-section-content").forEach(function(e){v?e.classList.remove("collapsed"):e.classList.add("collapsed")});document.querySelectorAll(".sidebar-section-title").forEach(function(e){v?e.classList.remove("collapsed"):e.classList.add("collapsed")})}document.addEventListener("click",function(e){var t=e.target.closest(".content img");if(t){var n=t.getAttribute("src");document.getElementById("lightbox-img").src=n,document.getElementById("lightbox").classList.add("show")}});function hideLightbox(){document.getElementById("lightbox").classList.remove("show")}<\/script>\n</body>\n</html>';
 }
 
 function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
