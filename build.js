@@ -72,6 +72,8 @@ const SECTIONS = [
   ]},
   { name: 'Tutorials', items: [
     { type: 'link', name: 'Building Effective Agents', file: 'tutorials/building-effective-agents.html' },
+    { type: 'link', name: 'Agents - Chip Huyen', file: 'tutorials/chip-huyen-agents.html' },
+    { type: 'link', name: 'LLM Powered Autonomous Agents', file: 'tutorials/lilian-weng-llm-agent.html' },
   ]},
   { name: 'Glossary', items: [
     { type: 'link', name: '术语表', file: 'glossary/glossary.html' },

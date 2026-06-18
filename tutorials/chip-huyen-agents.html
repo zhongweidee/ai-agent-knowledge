@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智能体（Agents） - AI Agent 知识库</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif; color:#333; line-height:1.6; background:#f5f5f5; }
+.layout { display:flex; min-height:100vh; }
+.sidebar { width:280px; background:#1a1a2e; color:#ccc; padding:0 0 20px 0; position:fixed; top:0; left:0; height:100vh; overflow-y:auto; flex-shrink:0; }
+.sidebar-header { padding:16px 20px 8px; border-bottom:1px solid #333; margin-bottom:8px; }
+.sidebar-header h2 { color:#e94560; font-size:16px; display:inline; }
+.sidebar-header a { color:#e94560; text-decoration:none; }
+.sidebar-tools { display:inline; float:right; }
+.sidebar-tools button { background:none; border:1px solid #555; color:#aaa; cursor:pointer; padding:0 7px; margin-left:3px; border-radius:3px; font-size:16px; font-weight:700; line-height:1.3; font-family:monospace; }
+.sidebar-tools button:hover { background:#333; color:#fff; }
+.sidebar-section { border-bottom:1px solid #222; }
+.sidebar-section-title { color:#e0e0e0; font-weight:600; font-size:12.5px; padding:8px 20px; cursor:pointer; user-select:none; display:flex; justify-content:space-between; align-items:center; text-transform:uppercase; letter-spacing:0.5px; }
+.sidebar-section-title:hover { background:#222; }
+.sidebar-section-title .toggle { color:#666; font-size:10px; transition:transform 0.2s; }
+.sidebar-section-title.collapsed .toggle { transform:rotate(-90deg); }
+.sidebar-section-content { overflow:hidden; transition:max-height 0.2s ease; }
+.sidebar-section-content.collapsed { max-height:0 !important; }
+.sidebar a { color:#9ba3b4; text-decoration:none; font-size:12.5px; display:block; padding:3px 20px 3px 28px; }
+.sidebar a:hover { color:#e94560; background:#222; }
+.sidebar a.active { color:#e94560; font-weight:500; background:#222; }
+.sidebar-group-label { color:#888; font-size:11px; padding:6px 20px 2px 24px; text-transform:uppercase; letter-spacing:0.3px; }
+.content { margin-left:280px; flex:1; max-width:960px; padding:40px 60px; background:#fff; min-height:100vh; }
+.content h1 { font-size:32px; font-weight:700; margin-bottom:20px; padding-bottom:12px; border-bottom:3px solid #e94560; color:#1a1a1a; }
+.content h2 { font-size:24px; font-weight:600; margin:32px 0 12px; color:#1a1a1a; border-bottom:1px solid #eee; padding-bottom:6px; }
+.content h3 { font-size:20px; font-weight:600; margin:24px 0 10px; color:#2a2a2a; }
+.content h4 { font-size:16px; font-weight:600; margin:20px 0 8px; }
+.content p { margin:0 0 14px; font-size:15px; }
+.content a { color:#0078d4; text-decoration:none; }
+.content a:hover { text-decoration:underline; }
+.content code { font-family:'Cascadia Code','Fira Code','Consolas',monospace; background:#f0f0f0; padding:2px 6px; border-radius:3px; font-size:13px; }
+.content pre { background:#1e1e1e; color:#d4d4d4; padding:16px; border-radius:6px; overflow-x:auto; margin:14px 0; }
+.content pre code { background:none; padding:0; color:inherit; font-size:13px; line-height:1.5; }
+.content table { border-collapse:collapse; margin:14px 0; width:100%; font-size:14px; }
+.content th, .content td { border:1px solid #ddd; padding:8px 12px; text-align:left; }
+.content th { background:#f8f8f8; font-weight:600; }
+.content tr:nth-child(even) td { background:#fafafa; }
+.content blockquote { border-left:4px solid #e94560; padding:8px 16px; margin:14px 0; background:#fef0f3; border-radius:0 4px 4px 0; }
+.content blockquote p { margin:0; }
+.content img { max-width:100%; border-radius:4px; margin:14px 0; border:1px solid #e0e0e0; }
+.content hr { border:none; border-top:1px solid #eee; margin:24px 0; }
+.content ul, .content ol { margin:0 0 14px; padding-left:24px; font-size:15px; }
+.content li { margin-bottom:4px; }
+.content .tag { display:inline-block; background:#e94560; color:#fff; font-size:11px; padding:2px 8px; border-radius:3px; margin-right:4px; }
+.content .tag-blue { background:#0078d4; }
+.content .tag-green { background:#28a745; }
+.content .info-box { background:#f0f7ff; border:1px solid #0078d4; border-radius:6px; padding:16px; margin:14px 0; }
+.content .info-box-title { font-weight:600; color:#0078d4; margin-bottom:6px; }
+@media (max-width:768px) { .sidebar { display:none; } .content { margin-left:0; padding:20px; } }
+</style>
+</head>
+<body>
+<div class="layout">
+  <div class="sidebar"><div class="sidebar-header"><h2><a href="../index.html">🤖 AI Agent 知识库</a></h2>
+<div class="sidebar-tools"><button onclick="toggleAll(true)" title="展开">+</button><button onclick="toggleAll(false)" title="折叠">−</button></div></div>
+<div class="sidebar-section"><div class="sidebar-section-title" onclick="ts('s-papers')"><span>Papers</span><span class="toggle">▼</span></div><div id="s-papers" class="sidebar-section-content"><div class="sidebar-group-label">综述</div>
+<a href="../papers/surveys/li-agent-ai-survey.html" class="">李飞飞 Agent AI 综述</a>
+<div class="sidebar-group-label">经典论文</div>
+<a href="../papers/classics/react.html" class="">ReAct: Reasoning + Acting</a>
+<a href="../papers/classics/generative-agents.html" class="">Generative Agents (AI小镇)</a>
+</div></div>
+<div class="sidebar-section"><div class="sidebar-section-title" onclick="ts('s-frameworks')"><span>Frameworks</span><span class="toggle">▼</span></div><div id="s-frameworks" class="sidebar-section-content"><a href="../frameworks/comparison.html" class="">框架对比与选型指南</a>
+</div></div>
+<div class="sidebar-section"><div class="sidebar-section-title" onclick="ts('s-tutorials')"><span>Tutorials</span><span class="toggle">▼</span></div><div id="s-tutorials" class="sidebar-section-content"><a href="../tutorials/building-effective-agents.html" class="">Building Effective Agents</a>
+<a href="../tutorials/chip-huyen-agents.html" class="active">Agents - Chip Huyen</a>
+<a href="../tutorials/lilian-weng-llm-agent.html" class="">LLM Powered Autonomous Agents</a>
+</div></div>
+<div class="sidebar-section"><div class="sidebar-section-title" onclick="ts('s-glossary')"><span>Glossary</span><span class="toggle">▼</span></div><div id="s-glossary" class="sidebar-section-content"><a href="../glossary/glossary.html" class="">术语表</a>
+</div></div>
+<div class="sidebar-section"><div class="sidebar-section-title" onclick="ts('s-resources')"><span>Resources</span><span class="toggle">▼</span></div><div id="s-resources" class="sidebar-section-content"><a href="../references/learning-path.html" class="">学习路线</a>
+</div></div>
+</div>
+  <div class="content">
+    <div class="breadcrumb"><a href="../index.html">首页</a></div>
+<h1>智能体（Agents）</h1>
+
+<p>许多人认为，智能体（Intelligent Agent）是人工智能的终极目标。Stuart Russell 和 Peter Norvig 的经典著作《人工智能：一种现代方法》（Prentice Hall, 1995）将人工智能研究领域定义为"<em>理性智能体（Rational Agent）的研究与设计</em>"。</p>
+
+<p>基础模型（Foundation Model）前所未有的能力，为我们打开了此前无法想象的智能体应用之门。这些新能力使得开发自主、智能的智能体成为可能，它们可以作为我们的助手、同事和教练。它们可以帮助我们创建网站、收集数据、规划旅行、进行市场调研、管理客户账户、自动化数据录入、为我们准备面试、面试候选人、谈判交易等等。可能性似乎是无穷无尽的，而这些智能体的潜在经济价值也是巨大的。</p>
+
+<p>本节将首先概述智能体，然后继续探讨决定智能体能力的两个方面：工具（Tool）和规划（Planning）。智能体以其新的运作模式，也带来了新的失败模式。本节将以如何评估智能体来捕捉这些失败的讨论作为结尾。</p>
+
+<p><em>本文改编自 <strong>AI Engineering</strong>（2025）的 <strong>智能体（Agents）</strong> 一节，并进行了小幅编辑以使其成为独立的文章。</em></p>
+
+<p><strong>说明</strong>：</p>
+<ol>
+  <li>AI 驱动的智能体是一个新兴领域，尚未建立起成熟的定义、开发和评估理论框架。本节是在现有文献基础上建立框架的一种尽力而为的尝试，但它将随着该领域的发展而演变。与本书其他部分相比，这一节更具实验性。我从早期审阅者那里得到了有益的反饋，也希望从这篇博文的读者那里获得反馈。</li>
+  <li>就在本书出版前，Anthropic 发表了一篇关于<a href="https://www.anthropic.com/research/building-effective-agents">构建有效智能体</a>的博文（2024 年 12 月）。我很高兴看到 Anthropic 的博文和我关于智能体的章节在<a href="https://cedricchee.com/blog/the-dna-of-ai-agents/">概念上是一致的</a>，尽管术语略有不同。不过，Anthropic 的文章侧重于孤立的模式，而我的文章则涵盖了事物的工作原理及原因。我也更侧重于规划、工具选择和失败模式。</li>
+  <li>本文包含大量背景信息。如果觉得有些内容过于深入细节，可以随时跳过去！</li>
+</ol>
+
+<h2 id="agent_overview">智能体概述（Agent Overview）</h2>
+
+<p>"智能体（Agent）"一词已在许多不同的工程语境中使用，包括但不限于软件智能体（Software Agent）、智能智能体（Intelligent Agent）、用户智能体（User Agent）、对话智能体（Conversational Agent）和强化学习智能体（Reinforcement Learning Agent）。那么，智能体到底是什么？</p>
+
+<p>智能体是任何能够感知其环境并对其环境采取行动的事物。《人工智能：一种现代方法》（1995）将智能体定义为任何可以被视为通过传感器感知环境并通过执行器对环境采取行动的事物。</p>
+
+<p>这意味着，智能体的特征在于它运作的<em>环境（Environment）</em>以及它能够执行的<em>一组动作（Set of Actions）</em>。</p>
+
+<p>智能体可以运作的<em>环境</em>由其用例决定。如果一个智能体是为了玩游戏（例如《我的世界》、围棋、《刀塔》）而开发，那么那个游戏就是它的环境。如果你想让一个智能体从互联网上抓取文档，环境就是互联网。自动驾驶汽车智能体的环境是道路系统及其周边区域。</p>
+
+<p>AI 智能体可以执行的<em>一组动作</em>通过它能访问的<em>工具（Tool）</em>来增强。你日常与之交互的许多由生成式 AI 驱动的应用就是拥有工具的智能体，尽管通常很简单。ChatGPT 就是一个智能体。它可以搜索网络、执行 Python 代码和生成图像。RAG 系统也是智能体——文本检索器、图像检索器和 SQL 执行器就是它们的工具。</p>
+
+<p>智能体的环境与其工具集之间存在很强的依赖关系。环境决定了智能体可能使用哪些工具。例如，如果环境是国际象棋游戏，智能体唯一可能的动作就是合法的国际象棋走法。然而，智能体的工具库存也限制了它可以运作的环境。例如，如果一个机器人的唯一动作是游泳，它将被限制在水环境中。</p>
+
+<p>图 6-8 展示了 <a href="https://arxiv.org/abs/2405.15793">SWE-agent</a>（Yang 等，2024）的可视化，这是一个基于 GPT-4 构建的智能体。它的环境是带有终端和文件系统的计算机。它的一组动作包括导航仓库、搜索文件、查看文件和编辑代码行。</p>
+
+<center>
+    <figure>
+    <img alt="一个编码智能体" src="https://huyenchip.com/assets/pics/agents/1-swe-agent.png" style="float: center; max-width: 90%; margin: 0 0 0em 0em" />
+    </figure>
+    图 6-8. SWE-agent 是一个编码智能体，其环境是计算机，其动作包括导航、搜索、查看文件和编辑
+</center>
+<p><br /></p>
+
+<p>AI 智能体旨在完成用户通常提供的任务。在 AI 智能体中，AI 是大脑，负责处理任务、规划实现该任务的一系列动作，并判断任务是否已完成。</p>
+
+<p>让我们回到上文 Kitty Vogue 示例中具有表格数据的 RAG 系统。这是一个具有三种动作的简单智能体：</p>
+
+<ul>
+  <li>响应生成（Response Generation），</li>
+  <li>SQL 查询生成（SQL Query Generation），以及</li>
+  <li>SQL 查询执行（SQL Query Execution）。</li>
+</ul>
+
+<p>给定查询 <code class="language-plaintext highlighter-rouge">"预测 Fruity Fedora 未来三个月的销售收入"</code>，智能体可能会执行以下一系列动作：</p>
+
+<ol>
+  <li>推理如何完成这个任务。它可能决定，为了预测未来销售，它首先需要过去五年的销售数据。智能体的推理可以表现为中间响应。</li>
+  <li>调用 SQL 查询生成来生成获取过去五年销售数据的查询。</li>
+  <li>调用 SQL 查询执行来执行这个查询。</li>
+  <li>推理工具输出（SQL 查询执行的输出）及其对销售预测的帮助。它可能决定这些数字不足以做出可靠的预测，可能是因为缺少值。然后它决定还需要过去营销活动的信息。</li>
+  <li>调用 SQL 查询生成来生成过去营销活动的查询。</li>
+  <li>调用 SQL 查询执行。</li>
+  <li>推理这些新信息足以帮助预测未来销售。然后它生成一个预测。</li>
+  <li>推理任务已成功完成。</li>
+</ol>
+
+<p>与非智能体用例相比，智能体通常需要更强大的模型，原因有两个：</p>
+
+<ul>
+  <li><strong>复合错误（Compound Mistakes）</strong>：智能体通常需要执行多个步骤才能完成一项任务，整体准确率随着步骤数量的增加而下降。如果模型的每一步准确率是 95%，那么经过 10 步，准确率将下降到 60%，而经过 100 步，准确率将只有 0.6%。</li>
+  <li><strong>更高的风险（Higher Stakes）</strong>：通过访问工具，智能体能够执行更有影响力的任务，但任何失败都可能带来更严重的后果。</li>
+</ul>
+
+<p>需要许多步骤的任务可能耗费时间和金钱。一个常见的抱怨是，智能体只擅长消耗你的 API 额度。然而，如果智能体能够自主运作，它们可以节省人类的时间，这使得它们的成本是值得的。</p>
+
+<p>在给定的环境中，智能体的成功取决于<strong>它可以访问的工具</strong>和<strong>其 AI 规划器（Planner）的能力</strong>。让我们首先来看看模型可以使用的不同类型的工具。然后再分析 AI 的规划能力。</p>
+
+<h2 id="tools">工具（Tools）</h2>
+
+<p>一个系统不需要访问外部工具才能成为智能体。但是，没有外部工具，智能体的能力将受到限制。仅靠模型本身，通常只能执行一个动作——大语言模型（LLM）可以生成文本，图像生成器可以生成图像。外部工具使智能体变得强大得多。</p>
+
+<p>工具有助于智能体感知环境并对其采取行动。允许智能体感知环境的动作是<em>只读动作（Read-Only Action）</em>，而允许智能体对环境采取行动的动作是<em>写入动作（Write Action）</em>。</p>
+
+<p>智能体可以访问的一组工具就是它的工具库存（Tool Inventory）。由于智能体的工具库存决定了智能体可以做什么，因此仔细考虑给智能体提供什么工具以及多少工具非常重要。更多的工具赋予智能体更强的能力。然而，工具越多，理解和有效使用它们就越具挑战性。需要通过实验来找到正确的工具集，这将在后面的"<strong>工具选择（Tool Selection）</strong>"部分讨论。</p>
+
+<p>根据智能体的环境，有许多可能的工具。以下是您可能想要考虑的三类工具：知识增强（Knowledge Augmentation，即上下文构建）、能力扩展（Capability Extension），以及让智能体对其环境采取行动的工具。</p>
+
+<h3 id="knowledge_augmentation">知识增强（Knowledge Augmentation）</h3>
+
+<p>我希望本书到目前为止已经让您相信了拥有相关上下文对模型响应质量的重要性。一个重要的工具类别包括那些帮助增强智能体知识的工具。其中一些已经讨论过：文本检索器、图像检索器和 SQL 执行器。其他潜在工具包括内部人员搜索、返回不同产品状态的库存 API、Slack 检索、电子邮件阅读器等。</p>
+
+<p>许多此类工具用您组织的私有流程和信息来增强模型。然而，工具也可以让模型访问公共信息，尤其是来自互联网的信息。</p>
+
+<p>网页浏览（Web Browsing）是 ChatGPT 最早集成且最被期待的能力之一。网页浏览可以防止模型变得过时。当模型训练所用的数据变得过时时，模型就会过时。如果模型的训练数据截止于上周，那么除非在上下文中提供了本周的信息，否则模型将无法回答需要本周信息的问题。如果没有网页浏览，模型将无法告诉你天气、新闻、即将到来的事件、股票价格、航班状态等信息。</p>
+
+<p>我将网页浏览作为一个涵盖性术语，涵盖所有访问互联网的工具，包括网络浏览器和诸如搜索 API、新闻 API、GitHub API 或社交媒体 API 等接口。</p>
+
+<p>虽然网页浏览允许你的智能体引用最新信息以生成更好的响应并减少幻觉，但它也可能让你的智能体接触到互联网的污浊之地。请谨慎选择你的互联网 API。</p>
+
+<h3 id="capability_extension">能力扩展（Capability Extension）</h3>
+
+<p>你可能还想考虑那些弥补 AI 模型固有限制的工具。它们是快速提升模型性能的简便方法。例如，AI 模型以不擅长数学而臭名昭著。如果你问一个模型 199,999 除以 292 等于多少，模型很可能会失败。然而，如果模型可以使用计算器，这个计算就变得微不足道了。与其试图训练模型精通算术，不如直接给模型一个工具，这样资源效率高得多。</p>
+
+<p>其他能够显著提升模型能力的简单工具包括日历、时区转换器、单位转换器（例如从磅到千克），以及可以翻译模型不擅长语言的翻译器。</p>
+
+<p>更复杂但功能更强大的工具是代码解释器（Code Interpreter）。与其训练模型理解代码，不如让它访问代码解释器来执行代码片段、返回结果或分析代码的失败。这种能力让你的智能体可以作为编码助手、数据分析师，甚至是编写代码进行实验和报告结果的研究助手。然而，自动代码执行存在代码注入攻击的风险，这将在第 5 章的"<strong>防御性提示工程（Defensive Prompt Engineering）</strong>"部分讨论。适当的安全措施对于保护你和你的用户的安全至关重要。</p>
+
+<p>工具可以将纯文本或纯图像模型转变为多模态模型。例如，一个只能生成文本的模型可以利用文本到图像模型作为工具，从而同时生成文本和图像。给定一个文本请求，智能体的 AI 规划器决定是调用文本生成、图像生成，还是两者都调用。这就是 ChatGPT 可以同时生成文本和图像的方式——它使用 DALL-E 作为其图像生成器。</p>
+
+<p>智能体还可以使用代码解释器来生成图表和图形，使用 LaTeX 编译器来渲染数学公式，或者使用浏览器从 HTML 代码渲染网页。</p>
+
+<p>类似地，一个只能处理文本输入的模型可以使用图像字幕工具来处理图像，使用转录工具来处理音频。它可以使用 OCR（光学字符识别）工具来读取 PDF。</p>
+
+<p><em>与仅通过提示（Prompting）甚至微调（Finetuning）相比，工具使用可以显著提升模型性能</em>。<a href="https://arxiv.org/abs/2304.09842">Chameleon</a>（Lu 等，2023）表明，一个由 GPT-4 驱动、配备 13 个工具集的智能体可以在多个基准测试上超越仅使用 GPT-4 的表现。该智能体使用的工具示例包括知识检索、查询生成器、图像字幕器、文本检测器和必应搜索。</p>
+
+<p>在 ScienceQA（一个科学问答基准测试）上，Chameleon 将已有的最佳少样本结果提升了 11.37%。在 TabMWP（表格数学应用题）（Lu 等，2022）上，Chameleon 将准确率提升了 17%。</p>
+
+<h3 id="write_actions">写入动作（Write Actions）</h3>
+
+<p>到目前为止，我们讨论了允许模型从其数据源读取信息的只读动作。但工具也可以执行写入动作，从而对数据源进行更改。SQL 执行器可以检索数据表（读取），也可以更改或删除表（写入）。电子邮件 API 可以读取邮件，但也可以回复邮件。银行 API 可以检索你的当前余额，但也可以发起银行转账。</p>
+
+<p>写入动作使系统能够做更多事情。它们可以使你自动化整个客户外联工作流：研究潜在客户、查找联系方式、起草邮件、发送首封邮件、阅读回复、跟进、提取订单、用新订单更新数据库等。</p>
+
+<p>然而，赋予 AI 自动改变我们生活的能力是令人恐惧的。就像你不应该让实习生有权删除你的生产数据库一样，你也不应该允许不可靠的 AI 发起银行转账。对系统能力及其安全措施的信任至关重要。你需要确保系统免受可能试图操纵它执行有害行为的恶意行为者的侵害。</p>
+
+<hr />
+<blockquote>
+  <p><strong>边栏：智能体与安全（Agents and Security）</strong></p>
+</blockquote>
+
+<p>每当我与一群人谈论自主 AI 智能体时，总会有人提起自动驾驶汽车。"<em>如果有人入侵汽车绑架你怎么办？</em>"虽然自动驾驶汽车的例子的冲击力来自于它的物理实存，但 AI 系统即使没有物理世界的存在也能造成伤害。它可以操纵股票市场、窃取版权、侵犯隐私、强化偏见、传播错误信息和宣传等，这将在第 5 章的"防御性提示工程"部分讨论。</p>
+
+<p>这些都是合理关切，任何希望利用 AI 的组织都需要认真对待安全与保障。然而，这并不意味着 AI 系统永远不应该被赋予在现实世界中行动的能力。如果我们能够信任一台机器将我们送入太空，我希望有一天，安全措施足以让我们信任自主 AI 系统。此外，人类也会犯错。就个人而言，我宁愿相信自动驾驶汽车，也不愿相信一个陌生的普通人载我一程。</p>
+
+<hr />
+<p><br />
+正如正确的工具可以帮助人类大幅提高生产力——你能想象没有 Excel 做生意或没有起重机建摩天大楼吗？——工具使模型能够完成更多任务。许多模型提供商已经支持其模型的工具使用，这一功能通常被称为函数调用（Function Calling）。展望未来，我预计带有广泛工具集的函数调用将成为大多数模型的标配。</p>
+
+<h2 id="planning">规划（Planning）</h2>
+
+<p>基础模型智能体的核心是负责解决用户提供任务的模型。一个任务由它的目标和约束来定义。例如，一个任务是从旧金山到印度安排一趟为期两周、预算 5000 美元的旅行。目标是两周旅行。约束是预算。</p>
+
+<p>复杂任务需要规划。规划过程的输出是一个计划（Plan），它是概述完成一项任务所需步骤的路线图。有效的规划通常要求模型理解任务，考虑完成该任务的不同选项，并选择最有前景的那一个。</p>
+
+<p>如果你参加过任何规划会议，你就会知道规划是困难的。作为一个重要的计算问题，规划已经被深入研究，需要好几卷书才能覆盖。我在这里只能触及表面。</p>
+
+<h3 id="planning_overview">规划概述（Planning Overview）</h3>
+
+<p>给定一个任务，有许多可能的解决方法，但并非所有方法都能导向成功的结果。在正确的解决方案中，有些比其他的更高效。考虑查询<code class="language-plaintext highlighter-rouge">"有多少没有收入的公司已经筹集了至少 10 亿美元？"</code>以及两个示例解决方案：</p>
+
+<ol>
+  <li>找到所有没有收入的公司，然后按筹集金额筛选。</li>
+  <li>找到所有已筹集至少 10 亿美元的公司，然后按收入筛选。</li>
+</ol>
+
+<p>第二个选项更高效。没有收入的公司数量远远多于筹集了 10 亿美元的公司。仅在这两个选项中，一个智能智能体应该选择选项 2。</p>
+
+<p>你可以将规划与执行耦合在同一个提示中。例如，你给模型一个提示，要求它逐步思考（例如使用思维链提示），然后在同一个提示中执行这些步骤。但如果模型想出了一个 1000 步的计划，却根本没有达成目标呢？在没有监督的情况下，智能体可能运行这些步骤数小时，浪费时间和金钱在 API 调用上，然后你才发现它根本行不通。</p>
+
+<p>为了避免徒劳的执行，<em>规划</em>应该与<em>执行（Execution）</em>解耦。你要求智能体首先生成计划，只有在这个计划被<em>验证（Validated）</em>之后才执行它。计划可以使用启发式方法进行验证。例如，一个简单的启发式方法是消除包含无效动作的计划。如果生成的计划需要 Google 搜索，而智能体无法访问 Google 搜索，那么这个计划就是无效的。另一个简单的启发式方法可能是消除所有超过 X 步的计划。</p>
+
+<p>计划也可以使用 AI 评判器（AI Judge）进行验证。你可以请一个模型评估计划是否合理，或者如何改进它。</p>
+
+<p>如果生成的计划被评估为不好，你可以要求规划器生成另一个计划。如果生成的计划是好的，就执行它。</p>
+
+<p>如果计划涉及外部工具，将调用函数调用（Function Calling）。执行此计划的输出将需要再次被评估。请注意，生成的计划不必是整个任务的端到端计划。它可以是一个子任务的小计划。整个过程如图 6-9 所示。</p>
+
+<center>
+    <figure>
+    <img alt="智能体模式" src="https://huyenchip.com/assets/pics/agents/2-agent-pattern.png" style="float: center; max-width: 90%; margin: 0 0 0em 0em" />
+    </figure>
+    图 6-9. 将规划与执行解耦，使得只有经过验证的计划才会被执行
+</center>
+<p><br /></p>
+
+<p>你的系统现在有三个组件：一个生成计划，一个验证计划，另一个执行计划。如果你将每个组件视为一个智能体，这可以被视为一个多智能体系统（Multi-Agent System）。由于大多数智能体工作流足够复杂，涉及多个组件，因此大多数智能体都是多智能体的。</p>
+
+<p>为了加快处理速度，你可以并行生成多个计划，而不是顺序生成，然后让评估器选择最有前景的一个。这是另一个延迟与成本的权衡，因为同时生成多个计划将产生额外成本。</p>
+
+<p>规划需要理解任务背后的意图：用户通过这个查询想要做什么？意图分类器（Intent Classifier）通常用于帮助智能体规划。如第 5 章"<strong>将复杂任务分解为更简单的子任务</strong>"部分所示，意图分类可以使用另一个提示或为此任务训练的分类模型来完成。意图分类机制可以被视为你的多智能体系统中的另一个智能体。</p>
+
+<p>了解意图可以帮助智能体选择正确的工具。例如，在客户支持中，如果查询是关于账单的，智能体可能需要访问检索用户最近付款的工具。但如果查询是关于如何重置密码，智能体可能需要访问文档检索。</p>
+
+<blockquote>
+  <p><strong>提示</strong>：</p>
+
+  <p>有些查询可能超出了智能体的范围。意图分类器应该能够将请求分类为 <code class="language-plaintext highlighter-rouge">不相关（IRRELEVANT）</code>，以便智能体可以礼貌地拒绝这些请求，而不是浪费 FLOPs 来想出不可能的解决方案。</p>
+</blockquote>
+
+<p>到目前为止，我们假设智能体自动化了所有三个阶段：生成计划、验证计划和执行计划。实际上，人类可以参与任何阶段以帮助处理流程并降低风险。</p>
+
+<ul>
+  <li>人类专家可以提供计划、验证计划或执行部分计划。例如，对于智能体难以生成完整计划的复杂任务，人类专家可以提供高级计划，智能体可以在此基础上进行扩展。</li>
+  <li>如果计划涉及有风险的操作，例如更新数据库或合并代码更改，系统可以在执行前要求明确的人工审批，或者委托人类来执行这些操作。为了实现这一点，你需要明确定义智能体对每个动作可以拥有的自动化级别。</li>
+</ul>
+
+<p>总结一下，解决一个任务通常涉及以下过程。请注意，反思（Reflection）对于智能体来说不是必须的，但它会显著提升智能体的性能。</p>
+
+<ol>
+  <li><em>计划生成（Plan Generation）</em>：提出完成此任务的计划。计划是一系列可管理的动作序列，因此这个过程也被称为任务分解（Task Decomposition）。</li>
+  <li><em>反思与错误纠正（Reflection and Error Correction）</em>：评估生成的计划。如果是糟糕的计划，则生成新的计划。</li>
+  <li><em>执行（Execution）</em>：按照生成的计划采取行动。这通常涉及调用特定的函数。</li>
+  <li><em>反思与错误纠正</em>：在收到动作结果后，评估这些结果并判断目标是否已完成。识别并纠正错误。如果目标未完成，则生成新的计划。</li>
+</ol>
+
+<p>你在本书中已经看到了一些计划生成和反思的技术。当你要求模型"逐步思考"时，你就是在要求它分解任务。当你要求模型"验证你的答案是否正确"时，你就是在要求它反思。</p>
+
+<h3 id="foundation_models_as_planners">作为规划器的基础模型（Foundation Models as Planners）</h3>
+
+<p>一个悬而未决的问题是，基础模型的规划能力到底如何。许多研究人员认为，基础模型——至少那些建立在自回归语言模型上的——无法规划。Meta 的首席 AI 科学家 Yann LeCun 明确表示<a href="https://x.com/ylecun/status/1702027572077326505">自回归大语言模型无法规划</a>（2023）。</p>
+
+<center>
+<blockquote class="twitter-tweet"><p lang="en" dir="ltr">自回归大语言模型（Auto-Regressive LLMs）无法规划<br />（也无法真正推理）。<br /><br />"虽然我们自己的有限实验没有显示微调在规划能力方面有显著改善，但有可能通过更多的微调数据和努力，经验性能仍然可以…… <a href="https://t.co/rHA5QHi90C">https://t.co/rHA5QHi90C</a></p>&mdash; Yann LeCun (@ylecun) <a href="https://twitter.com/ylecun/status/1702027572077326505?ref_src=twsrc%5Etfw">2023 年 9 月 13 日</a></blockquote> <script async="" src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+</center>
+
+<p>虽然有大量轶事证据表明大语言模型是糟糕的规划者，但不清楚这是因为我们不知道如何正确地使用大语言模型，还是因为大语言模型从根本上就无法规划。</p>
+
+<p><strong>规划，其核心是一个搜索问题</strong>。你在通往目标的不同路径中进行搜索，预测每条路径的结果（奖励），并选择结果最有前景的路径。通常，你可能会确定没有任何路径可以将你带到目标。</p>
+
+<p>搜索通常需要<em>回溯（Backtracking）</em>。例如，假设你处于一个步骤，有两个可能的动作：A 和 B。在执行动作 A 之后，你进入了一个没有前景的状态，因此你需要回溯到之前的状态以执行动作 B。</p>
+
+<p>一些人认为，自回归模型只能生成前向动作。它不能回溯以生成替代动作。基于此，他们得出结论，自回归模型无法规划。然而，这不一定是真的。在执行了包含动作 A 的路径后，如果模型确定这条路径没有意义，它可以修改路径，使用动作 B 代替，从而有效地进行回溯。模型也可以始终重新开始并选择另一条路径。</p>
+
+<p>也有可能大语言模型是糟糕的规划者，因为它们没有被赋予规划所需的工具。要进行规划，不仅需要知道可用的动作，还需要知道<em>每个动作的潜在结果</em>。举个简单的例子，假设你想爬上一座山。你的潜在动作是右转、左转、掉头或直行。然而，如果右转会让你掉下悬崖，你可能就不会考虑这个动作。用技术术语来说，一个动作将你从一个状态带到另一个状态，有必要知道结果状态以决定是否采取某个动作。</p>
+
+<p>这意味着仅提示模型生成一系列动作（如流行的思维链提示技术所做的那样）是不够的。论文"<a href="https://arxiv.org/abs/2305.14992">用语言模型推理就是用世界模型规划</a>"（Hao 等，2023）认为，大语言模型由于包含了大量关于世界的信息，能够预测每个动作的结果。这个语言模型可以结合这种结果预测来生成连贯的计划。</p>
+
+<p>即使 AI 无法规划，它仍然可以成为规划器的一部分。也许可以用搜索工具和状态跟踪系统来增强大语言模型，以帮助它规划。</p>
+
+<hr />
+
+<blockquote>
+  <p><strong>边栏：基础模型（FM）规划器与强化学习（RL）规划器</strong></p>
+</blockquote>
+
+<p>"智能体（Agent）"是强化学习中的一个核心概念，<a href="https://en.wikipedia.org/wiki/Reinforcement_learning">维基百科</a>将其定义为"<em>关注智能智能体如何在动态环境中采取行动以最大化累积奖励</em>"的领域。</p>
+
+<p>强化学习智能体和基础模型智能体在许多方面是相似的。它们都以环境和可能的动作来定义。主要区别在于它们的规划器的工作方式。</p>
+<ul>
+  <li>在强化学习智能体中，规划器由强化学习算法训练。训练这个强化学习规划器可能需要大量的时间和资源。</li>
+  <li>在基础模型智能体中，模型本身就是规划器。这个模型可以通过提示或微调来改进其规划能力，通常需要较少的时间和资源。</li>
+</ul>
+
+<p>然而，没有什么能阻止基础模型智能体结合强化学习算法来改进其性能。我猜测，从长远来看，基础模型智能体和强化学习智能体将会融合。</p>
+
+<hr />
+
+<h3 id="plan_generation">计划生成（Plan Generation）</h3>
+
+<p>将模型转变为计划生成器的最简单方法是通过提示工程。假设你想要创建一个智能体来帮助客户了解 Kitty Vogue 的产品。你给这个智能体访问三个外部工具的权限：按价格检索产品、检索热门产品和检索产品信息。以下是一个用于计划生成的提示示例。此提示仅用于说明目的。生产环境中的提示可能更复杂。</p>
+
+<p><strong>系统提示（SYSTEM PROMPT）</strong>：</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>提出一个计划来解决该任务。你可以使用 5 种动作：
+
+* get_today_date()
+* fetch_top_products(start_date, end_date, num_products)
+* fetch_product_info(product_name)
+* generate_query(task_history, tool_output)
+* generate_response(query)
+
+计划必须是有效动作的序列。
+
+示例
+任务："告诉我关于 Fruity Fedora 的信息"
+计划：[fetch_product_info, generate_query, generate_response]
+
+任务："上周最畅销的产品是什么？"
+计划：[fetch_top_products, generate_query, generate_response]
+
+任务：{用户输入}
+计划：
+
+</code></pre></div></div>
+
+<p>关于这个示例有两点需要注意：</p>
+
+<ul>
+  <li>这里使用的计划格式——一个函数列表，其参数由智能体推断——只是组织智能体控制流的众多方式之一。</li>
+  <li><code class="language-plaintext highlighter-rouge">generate_query</code> 函数接收任务的当前历史和最近的工具输出，生成一个查询以馈送给响应生成器。每一步的工具输出都会被添加到任务的历史中。</li>
+</ul>
+
+<p>对于用户输入"上周最畅销产品的价格是多少？"，生成的计划可能如下所示：</p>
+
+<ol>
+  <li><code class="language-plaintext highlighter-rouge">get_time()</code></li>
+  <li><code class="language-plaintext highlighter-rouge">fetch_top_products()</code></li>
+  <li><code class="language-plaintext highlighter-rouge">fetch_product_info()</code></li>
+  <li><code class="language-plaintext highlighter-rouge">generate_query()</code></li>
+  <li><code class="language-plaintext highlighter-rouge">generate_response()</code></li>
+</ol>
+
+<p>你可能想知道，"每个函数所需的参数怎么办？"确切的参数很难提前预测，因为它们通常是从之前的工具输出中提取的。如果第一步 <code class="language-plaintext highlighter-rouge">get_time()</code> 输出"2030-09-13"，智能体可以推断下一步的参数应使用以下参数调用：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>fetch_top_products(
+    start_date="2030-09-07",
+    end_date="2030-09-13",
+    num_products=1
+)
+</code></pre></div></div>
+
+<p>通常，没有足够的信息来确定函数的确切参数值。例如，如果用户问"最畅销产品的平均价格是多少？"，以下问题的答案并不清楚：</p>
+
+<ul>
+  <li>用户想看多少个最畅销产品？</li>
+  <li>用户想要上周、上个月还是有史以来的最畅销产品？</li>
+</ul>
+
+<p>这意味着模型经常不得不进行猜测，而猜测可能是错误的。</p>
+
+<p>由于动作序列和相关的参数都是由 AI 模型生成的，它们可能会被幻觉（Hallucination）影响。幻觉可能导致模型调用无效函数，或者调用有效函数但使用错误的参数。提高模型整体性能的技术也可以用于提高模型的规划能力。</p>
+
+<blockquote>
+  <p><strong>使智能体更善于规划的技巧</strong>。</p>
+
+  <ul>
+    <li>编写更好的系统提示，包含更多示例。</li>
+    <li>给工具及其参数提供更好的描述，以便模型更好地理解它们。</li>
+    <li>重写函数本身使其更简单，例如将一个复杂函数重构为两个更简单的函数。</li>
+    <li>使用更强的模型。通常，更强的模型更善于规划。</li>
+    <li>为计划生成微调模型。</li>
+  </ul>
+</blockquote>
+
+<h4 id="function_calling">函数调用（Function Calling）</h4>
+
+<p>许多模型提供商为他们的模型提供工具使用支持，有效地将他们的模型转变为智能体。工具是一个函数。因此，调用工具通常被称为<em>函数调用（Function Calling）</em>。不同的模型 API 工作方式不同，但通常情况下，函数调用的工作方式如下：</p>
+
+<ol>
+  <li><em>创建工具库存。</em>
+声明你可能希望模型使用的所有工具。每个工具由其执行入口点（例如，其函数名）、参数和文档（例如，函数的功能及其所需的参数）来描述。</li>
+  <li><em>指定智能体可以针对某个查询使用哪些工具。</em> <br />
+由于不同的查询可能需要不同的工具，许多 API 允许你指定每个查询要使用的已声明工具列表。有些还允许你通过以下设置进一步控制工具使用：
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">required</code>：模型必须使用至少一个工具。</li>
+      <li><code class="language-plaintext highlighter-rouge">none</code>：模型不应使用任何工具。</li>
+      <li><code class="language-plaintext highlighter-rouge">auto</code>：模型自行决定使用哪些工具。</li>
+    </ul>
+  </li>
+</ol>
+
+<p>函数调用如图 6-10 所示。这是用伪代码编写的，以使其代表多个 API。要使用特定的 API，请参考其文档。</p>
+
+<center>
+    <figure>
+    <img alt="函数调用的一个示例" src="https://huyenchip.com/assets/pics/agents/3-function-calling.png" style="float: center; max-width: 100%; margin: 0 0 0em 0em" />
+    </figure>
+    图 6-10. 一个模型使用两个简单工具的示例
+</center>
+<p><br /></p>
+
+<p>给定一个查询，按照图 6-10 定义的智能体会自动生成要使用的工具及其参数。一些函数调用 API 会确保只生成有效的函数，尽管它们无法保证参数值正确。</p>
+
+<p>例如，给定用户查询"40 磅等于多少千克？"，智能体可能决定需要 <code class="language-plaintext highlighter-rouge">lbs_to_kg_tool</code> 工具，其一个参数值为 40。智能体的响应可能如下所示：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>response = ModelResponse(
+    finish_reason='tool_calls',
+    message=chat.Message(
+        content=None,
+        role='assistant',
+        tool_calls=[
+            ToolCall(
+                function=Function(
+                    arguments='{"lbs":40}',
+                    name='lbs_to_kg'),
+                type='function')
+        ])
+)
+</code></pre></div></div>
+
+<p>从这个响应中，你可以调用函数 <code class="language-plaintext highlighter-rouge">lbs_to_kg(lbs=40)</code> 并使用其输出向用户生成响应。</p>
+
+<blockquote>
+  <p><strong>提示</strong>：在使用智能体时，始终要求系统报告它在每个函数调用中使用的参数值。检查这些值以确保它们正确。</p>
+</blockquote>
+
+<h4 id="planning_granularity">规划粒度（Planning Granularity）</h4>
+
+<p>计划是概述完成一项任务所需步骤的路线图。路线图可以有不同级别的粒度。规划一年时，按季度规划比按月规划更粗粒度，而按月规划又比按周规划更粗粒度。</p>
+
+<p>规划与执行之间存在权衡。详细的计划更难生成，但更容易执行。粗粒度的计划更容易生成，但更难执行。规避这种权衡的一种方法是分层规划。首先使用一个规划器生成粗粒度的计划，例如按季度规划。然后，对于每个季度，使用相同或不同的规划器生成按月规划。</p>
+
+<p>到目前为止，所有生成的计划示例都使用了确切的函数名，这是非常细粒度的。这种方法的一个问题是，智能体的工具库存可能会随时间变化。例如，获取当前日期的函数 <code class="language-plaintext highlighter-rouge">get_time()</code> 可能被重命名为 <code class="language-plaintext highlighter-rouge">get_current_time()</code>。当工具发生变化时，你需要更新你的提示和所有示例。使用确切的函数名也使得在不同用例和不同工具 API 之间复用规划器变得更加困难。</p>
+
+<p>如果你之前基于旧工具库存微调了一个模型来生成计划，你将需要在新工具库存上再次微调模型。</p>
+
+<p>为了避免这个问题，计划也可以使用更自然的语言生成，这比领域特定的函数名更粗粒度。例如，给定查询"上周最畅销产品的价格是多少？"，可以指示智能体输出如下所示的计划：</p>
+
+<ol>
+  <li><code class="language-plaintext highlighter-rouge">获取当前日期</code></li>
+  <li><code class="language-plaintext highlighter-rouge">检索上周最畅销产品</code></li>
+  <li><code class="language-plaintext highlighter-rouge">检索产品信息</code></li>
+  <li><code class="language-plaintext highlighter-rouge">生成查询</code></li>
+  <li><code class="language-plaintext highlighter-rouge">生成响应</code></li>
+</ol>
+
+<p>使用更自然的语言有助于你的计划生成器对工具 API 的变化更加鲁棒。如果你的模型主要是在自然语言上训练的，它很可能更擅长理解和使用自然语言生成计划，并且不太可能产生幻觉。</p>
+
+<p>这种方法的缺点是你需要一个翻译器将每个自然语言动作转换为可执行的命令。<a href="https://arxiv.org/abs/2304.09842">Chameleon</a>（Lu 等，2023）将这个翻译器称为程序生成器（Program Generator）。然而，翻译是一个比规划简单得多的任务，可以由较弱的模型完成，幻觉风险也更低。</p>
+
+<h4 id="complex_plans">复杂计划（Complex Plans）</h4>
+
+<p>到目前为止的计划示例都是顺序的：计划中的下一个动作<em>总是</em>在前一个动作完成后执行。动作可以执行的顺序被称为<em>控制流（Control Flow）</em>。顺序形式只是控制流的一种类型。其他类型的控制流包括并行、条件语句和循环。以下列表概述了每种控制流，包括顺序以便对比：</p>
+
+<ul>
+  <li>
+    <p><strong>顺序（Sequential）</strong></p>
+
+    <p>在任务 A 完成后执行任务 B，可能是因为任务 B 依赖于任务 A。例如，SQL 查询只有在从自然语言输入翻译完成后才能执行。</p>
+  </li>
+  <li>
+    <p><strong>并行（Parallel）</strong></p>
+
+    <p>同时执行任务 A 和任务 B。例如，给定查询"找到价格低于 100 美元的最畅销产品"，智能体可能首先检索前 100 个最畅销产品，然后为每个产品检索其价格。</p>
+  </li>
+  <li>
+    <p><strong>条件语句（If Statement）</strong></p>
+
+    <p>根据上一步的输出执行任务 B 或任务 C。例如，智能体首先查看英伟达（NVIDIA）的收益报告。基于此报告，它可以决定卖出或买入英伟达股票。<a href="https://www.anthropic.com/research/building-effective-agents">Anthropic 的文章</a>将此模式称为"路由（Routing）"。</p>
+  </li>
+  <li>
+    <p><strong>循环（For Loop）</strong></p>
+
+    <p>重复执行任务 A，直到满足特定条件。例如，不断生成随机数，直到得到一个质数。</p>
+  </li>
+</ul>
+
+<p>这些不同的控制流如图 6-11 所示。</p>
+
+<center>
+    <figure>
+    <img alt="智能体控制流" src="https://huyenchip.com/assets/pics/agents/4-agent-control-flow.png" style="float: center; max-width: 90%; margin: 0 0 0em 0em" />
+    </figure>
+    图 6-11. 计划可以执行的不同顺序示例
+</center>
+<p><br /></p>
+
+<p>在传统软件工程中，控制流的条件是精确的。在 AI 驱动的智能体中，AI 模型确定控制流。具有非顺序控制流的计划更难生成，也更难翻译为可执行命令。</p>
+
+<blockquote>
+  <p><strong>提示</strong>：</p>
+
+  <p>在评估智能体框架时，检查它支持哪些控制流。例如，如果系统需要浏览十个网站，它可以同时进行吗？并行执行可以显著减少用户感知到的延迟。</p>
+</blockquote>
+
+<h3 id="reflection_and_error_correction">反思与错误纠正（Reflection and Error Correction）</h3>
+
+<p>即使是最好的计划也需要不断评估和调整，以最大化其成功的机会。虽然反思对智能体运作来说并非严格必要，但它是智能体成功的必要条件。</p>
+
+<p>在任务处理过程中，有许多地方反思可能有用：</p>
+
+<ul>
+  <li>在收到用户查询后，评估请求是否可行。</li>
+  <li>在初始计划生成后，评估计划是否合理。</li>
+  <li>在每个执行步骤之后，评估是否在正确的轨道上。</li>
+  <li>在整个计划执行完毕后，确定任务是否已完成。</li>
+</ul>
+
+<p>反思和错误纠正是两个不同的机制，但它们相辅相成。反思产生洞察，帮助发现需要纠正的错误。</p>
+
+<p>反思可以由同一个智能体通过自我批评提示来完成。也可以由单独的组件完成，例如专门的评分器（Scorer）：一个为每个结果输出具体分数的模型。</p>
+
+<p>由 <a href="https://arxiv.org/abs/2210.03629">ReAct</a>（Yao 等，2022）首次提出，交错进行<span style="text-decoration:underline;">推理</span>和<span style="text-decoration:underline;">行动</span>已成为智能体的常见模式。Yao 等人使用"推理（Reasoning）"一词来涵盖规划和反思。在每一步，智能体被要求解释其思考（规划）、采取行动，然后分析观察结果（反思），直到智能体认为任务完成。通常，通过示例提示智能体按照以下格式生成输出：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>思考 1: …
+行动 1: …
+观察 1: …
+
+… [持续直到反思确定任务已完成] …
+
+思考 N: …
+行动 N: 完成 [对查询的响应]
+</code></pre></div></div>
+
+<p>图 6-12 展示了一个遵循 ReAct 框架的智能体回答 HotpotQA（<a href="https://arxiv.org/abs/1809.09600">Yang 等，2018</a>）中一个问题的示例，HotpotQA 是一个用于多跳问答的基准测试。</p>
+
+<center>
+    <figure>
+    <img alt="ReAct 示例" src="https://huyenchip.com/assets/pics/agents/5-ReAct.png" style="float: center; max-width: 80%; margin: 0 0 0em 0em" />
+    </figure>
+    图 6-12: 一个运行中的 ReAct 智能体。
+</center>
+<p><br /></p>
+
+<p>你可以在多智能体设置中实现反思：一个智能体负责规划和行动，另一个智能体在每一步或若干步之后评估结果。</p>
+
+<p>如果智能体的响应未能完成任务，你可以提示智能体反思为什么会失败以及如何改进。基于此建议，智能体生成一个新的计划。这使得智能体能够从错误中学习。</p>
+
+<p>例如，对于一个代码生成任务，评估器可能评估生成的代码有 1/3 的测试用例失败。智能体随后反思，认为它失败是因为没有考虑到所有数字都是负数的数组。行动者随后生成新的代码，考虑到所有负数数组的情况。</p>
+
+<p>这就是 Reflexion（<a href="https://arxiv.org/abs/2303.11366">Shinn 等，2023</a>）采用的方法。在这个框架中，反思被分为两个模块：一个评估结果的评估器和一个分析错误原因的自反思模块。图 6-13 展示了 Reflexion 智能体在行动中的示例。作者使用"轨迹（Trajectory）"来指代一个计划。在每一步，经过评估和自反思后，智能体会提出一个新的轨迹。</p>
+
+<center>
+    <figure>
+    <img alt="Reflexion 示例" src="https://huyenchip.com/assets/pics/agents/6-reflexion.png" style="float: center; max-width: 100%; margin: 0 0 0em 0em" />
+    </figure>
+    图 6-13. Reflexion 智能体工作原理的示例。
+</center>
+<p><br /></p>
+
+<p>与计划生成相比，反思相对容易实现，并且可以带来令人惊讶的良好性能提升。这种方法的不利之处在于延迟和成本。思考、观察，有时还有行动可能需要生成大量的词元（Token），这会增加成本和用户感知到的延迟，特别是对于具有许多中间步骤的任务。为了促使他们的智能体遵循格式，ReAct 和 Reflexion 的作者在提示中使用了大量的示例。这增加了输入词元的计算成本，并减少了其他信息可用的上下文空间。</p>
+
+<h3 id="tool_selection">工具选择（Tool Selection）</h3>
+
+<p>由于工具通常在任务成功中起着关键作用，工具选择需要仔细考虑。给你的智能体提供的工具取决于环境和任务，但也取决于驱动智能体的 AI 模型。</p>
+
+<p>没有万无一失的指南可以教你如何选择最佳工具集。智能体文献中包含了各种各样的工具库存。例如：</p>
+<ul>
+  <li><a href="https://arxiv.org/abs/2302.04761">Toolformer</a>（Schick 等，2023）微调了 GPT-J 来学习 5 个工具。</li>
+  <li><a href="https://arxiv.org/abs/2304.09842">Chameleon</a>（Lu 等，2023）使用了 13 个工具。</li>
+  <li><a href="https://arxiv.org/abs/2305.15334">Gorilla</a>（Patil 等，2023）尝试提示智能体在 1,645 个 API 中选择正确的 API 调用。</li>
+</ul>
+
+<p>更多的工具赋予智能体更强的能力。然而，工具越多，有效使用它们就越困难。这与人类掌握大量工具更难以同理。添加工具还意味着增加了工具描述，这可能无法放入模型的上下文中。</p>
+
+<p>像构建 AI 应用时的许多其他决策一样，工具选择需要实验和分析。以下是一些可以帮助你决策的方法：</p>
+
+<ul>
+  <li>比较智能体在不同工具集下的表现。</li>
+  <li>进行消融研究（Ablation Study），看看如果从库存中移除某个工具，智能体的性能会下降多少。如果一个工具可以被移除而不影响性能，就移除它。</li>
+  <li>查找智能体经常出错的工具。如果一个工具对于智能体来说太难使用——例如，大量提示甚至微调都无法让模型学会使用它——则更换该工具。</li>
+  <li>绘制工具调用的分布图，看看哪些工具使用最多，哪些使用最少。图 6-14 显示了 <a href="https://arxiv.org/abs/2304.09842">Chameleon</a>（Lu 等，2023）中 GPT-4 和 ChatGPT 在工具使用模式上的差异。</li>
+</ul>
+
+<center>
+    <figure>
+    <img alt="不同模型有不同工具偏好" src="https://huyenchip.com/assets/pics/agents/7-tool-preference.png" style="float: center; max-width: 100%; margin: 0 0 0em 0em" />
+    </figure>
+    图 6-14. 不同模型和任务表现出不同的工具使用模式。
+</center>
+<p><br /></p>
+
+<p><a href="https://arxiv.org/abs/2304.09842">Chameleon</a>（Lu 等，2023）的实验也证明了两点：</p>
+
+<ol>
+  <li>不同的任务需要不同的工具。ScienceQA（科学问答任务）比 TabMWP（表格数学解题任务）更加依赖知识检索工具。</li>
+  <li>不同模型有不同的工具偏好。例如，GPT-4 似乎会选择更广泛的工具集。ChatGPT 似乎偏好图像字幕，而 GPT-4 似乎偏好知识检索。</li>
+</ol>
+
+<blockquote>
+  <p><strong>提示</strong>：</p>
+
+  <p>在评估智能体框架时，评估它支持哪些规划器和工具。不同的框架可能侧重于不同类别的工具。例如，AutoGPT 侧重于社交媒体 API（Reddit、X 和维基百科），而 Composio 侧重于企业 API（Google Apps、GitHub 和 Slack）。</p>
+
+  <p>由于你的需求可能随时间变化，评估扩展智能体以整合新工具的难易程度。</p>
+</blockquote>
+
+<p>作为人类，我们不仅通过使用现有的工具来提高生产力，还通过从简单的工具逐步创建更强大的工具来提高生产力。AI 可以从其初始工具中创建新工具吗？</p>
+
+<p><a href="https://arxiv.org/abs/2304.09842">Chameleon</a>（Lu 等，2023）提出了工具转换（Tool Transition）的研究：在工具 X 之后，智能体有多大可能性调用工具 Y？图 6-15 展示了一个工具转换的示例。如果两个工具经常一起使用，它们可以组合成一个更大的工具。如果智能体知道这一信息，它自己就可以组合初始工具，不断构建更复杂的工具。</p>
+
+<center>
+    <figure>
+    <img alt="工具转换" src="https://huyenchip.com/assets/pics/agents/8-tool-transition.png" style="float: center; max-width: 70%; margin: 0 0 0em 0em" />
+    </figure>
+    图 6-15. Chameleon（Lu 等，2023）的工具转换树。
+</center>
+<p><br /></p>
+
+<p><a href="https://arxiv.org/abs/2305.16291">Voyager</a>（Wang 等，2023）提出了一个技能管理器（Skill Manager），用于跟踪智能体获取的新技能（工具），以便后续复用。每个技能都是一个编码程序。当技能管理器确定一个新创建的技能是有用的（例如，因为它成功帮助智能体完成了一个任务），它就将此技能添加到技能库（概念上类似于工具库存）中。这个技能可以在以后被检索出来用于其他任务。</p>
+
+<p>在本节前面，我们提到智能体在环境中的成功取决于其工具库存和规划能力。在任何一个方面的失败都可能导致智能体失败。下一节将讨论智能体的不同失败模式以及如何评估它们。</p>
+
+<h2 id="agent_failure_modes_and_evaluation">智能体失败模式与评估（Agent Failure Modes and Evaluation）</h2>
+
+<p>评估就是检测失败。智能体执行的任务越复杂，可能的失败点就越多。除了第 3 章和第 4 章讨论的所有 AI 应用共有的失败模式外，智能体还有由规划、工具执行和效率引起的独特失败。有些失败比其他失败更容易捕捉。</p>
+
+<p>要评估一个智能体，需要识别其失败模式，并衡量每种失败模式发生的频率。</p>
+
+<h3 id="planning_failures">规划失败（Planning Failures）</h3>
+
+<p>规划是困难的，可能在许多方面失败。最常见的规划失败模式是工具使用失败。智能体可能生成一个包含以下一个或多个错误的计划。</p>
+
+<ul>
+  <li>
+    <p><strong>无效工具（Invalid Tool）</strong></p>
+
+    <p>例如，它生成了一个包含 <code class="language-plaintext highlighter-rouge">bing_search</code> 的计划，但该工具不在工具库存中。</p>
+  </li>
+  <li>
+    <p><strong>有效工具，无效参数（Valid Tool, Invalid Parameters）</strong></p>
+
+    <p>例如，它调用 <code class="language-plaintext highlighter-rouge">lbs_to_kg</code> 时传入了两个参数，但该函数只需要一个参数 <code class="language-plaintext highlighter-rouge">lbs</code>。</p>
+  </li>
+  <li>
+    <p><strong>有效工具，错误的参数值（Valid Tool, Incorrect Parameter Values）</strong></p>
+
+    <p>例如，它调用 <code class="language-plaintext highlighter-rouge">lbs_to_kg</code> 时传入了一个参数 <code class="language-plaintext highlighter-rouge">lbs</code>，但使用的值是 100，而实际应为 120。</p>
+  </li>
+</ul>
+
+<p>另一种规划失败模式是目标失败（Goal Failure）：智能体未能达成目标。这可能是因为计划未能解决任务，或者虽然解决了任务但没有遵循约束。为了说明这一点，假设你要求模型规划一次从旧金山到印度的两周旅行，预算为 5000 美元。智能体可能规划了一次从旧金山到越南的旅行，或者规划了一次从旧金山到印度但花费远超预算的两周旅行。</p>
+
+<p>一个常被智能体评估忽视的常见约束是时间。在许多情况下，智能体花费的时间并不重要，因为你可以给智能体分配一个任务，只需要在完成后检查结果。然而，在很多情况下，智能体随时间推移会变得不那么有用。例如，如果你要求智能体准备一份资助申请书，而它在资助截止日期后才完成，那智能体就不太有用。</p>
+
+<p>一种有趣的规划失败模式是由反思错误引起的。智能体确信自己已完成了一个任务，但实际上并没有。例如，你要求智能体将 50 个人分配到 30 个酒店房间。智能体可能只分配了 40 个人，却坚称任务已完成。</p>
+
+<p>为了评估智能体的规划失败，一种选择是创建一个规划数据集，其中每个示例是一个元组 <code class="language-plaintext highlighter-rouge">(任务, 工具库存)</code>。对于每个任务，使用智能体生成 K 个计划。计算以下指标：</p>
+
+<ol>
+  <li>在所有生成的计划中，有多少是有效的？</li>
+  <li>对于给定任务，智能体需要生成多少个计划才能得到一个有效的计划？</li>
+  <li>在所有工具调用中，有多少是有效的？</li>
+  <li>无效工具被调用的频率有多高？</li>
+  <li>有效工具但使用无效参数的频率有多高？</li>
+  <li>有效工具但使用错误参数值的频率有多高？</li>
+</ol>
+
+<p>分析智能体的输出以寻找模式。智能体在哪些类型的任务上更容易失败？你有关于原因假设吗？模型经常在哪些工具上犯错？某些工具可能对智能体来说更难使用。你可以通过更好的提示、更多示例或微调来提高智能体使用具有挑战性的工具的能力。如果所有方法都失败，你可以考虑将这个工具替换为更容易使用的工具。</p>
+
+<h3 id="tool_failures">工具失败（Tool Failures）</h3>
+
+<p>工具失败发生在使用了正确的工具，但工具输出有误时。一种失败模式是工具直接给出了错误的输出。例如，图像字幕器返回了错误的描述，或者 SQL 查询生成器返回了错误的 SQL 查询。</p>
+
+<p>如果智能体只生成粗粒度的计划，并且涉及一个将每个计划动作翻译为可执行命令的翻译模块，失败可能由于翻译错误而发生。</p>
+
+<p>工具失败是依赖具体工具的。每个工具需要独立测试。始终打印每个工具调用及其输出，以便可以检查和评估它们。如果你有翻译器，请创建基准测试来评估它。</p>
+
+<p>检测缺失工具失败需要理解应该使用哪些工具。如果你的智能体在某个特定领域频繁失败，这可能是因为它缺少该领域的工具。与人类领域专家合作，观察他们会使用哪些工具。</p>
+
+<h3 id="efficiency">效率（Efficiency）</h3>
+
+<p>一个智能体可能生成了一个有效的计划，使用了正确的工具来完成一个任务，但可能效率低下。以下是你可能想跟踪的一些方面，以评估智能体的效率：</p>
+
+<ul>
+  <li>智能体平均需要多少步来完成一个任务？</li>
+  <li>智能体平均需要花费多少来完成一个任务？</li>
+  <li>每个动作通常需要多长时间？是否有特别耗时或昂贵的动作？</li>
+</ul>
+
+<p>你可以将这些指标与你的基线进行比较，基线可以是另一个智能体或人类操作员。在比较 AI 智能体和人类智能体时，请记住人类和 AI 有着非常不同的运作模式，因此对人类来说高效的方式对 AI 来说可能低效，反之亦然。例如，访问 100 个网页对人类智能体来说可能是低效的（因为一次只能访问一个页面），但对可以同时访问所有网页的 AI 智能体来说却轻而易举。</p>
+
+<h2 id="conclusion">结论（Conclusion）</h2>
+
+<p>智能体的核心概念其实相当简单。智能体由其运作的环境和它可以访问的工具集来定义。在 AI 驱动的智能体中，AI 模型是大脑，它利用工具和环境反馈来规划如何最好地完成一项任务。访问工具使模型变得更加强大，因此智能体模式是不可避免的。</p>
+
+<p>虽然"智能体"这个概念听起来新颖，但它们建立在自大语言模型早期就被使用的许多概念之上，包括自我批评（Self-Critique）、思维链（Chain-of-Thought）和结构化输出（Structured Outputs）。</p>
+
+<p>本文从概念上介绍了智能体的工作原理以及智能体的不同组成部分。在未来的文章中，我将讨论如何评估智能体框架。</p>
+
+<p>智能体模式经常处理超过模型上下文限制的信息。一个补充模型上下文处理信息的记忆系统可以显著增强智能体的能力。由于本文已经很长，我将在未来的博文中探索记忆系统的工作原理。</p>
+  </div>
+</div>
+<script>function ts(id){var e=document.getElementById(id),t=e.previousElementSibling;e.classList.contains("collapsed")?(e.classList.remove("collapsed"),t.classList.remove("collapsed")):(e.classList.add("collapsed"),t.classList.add("collapsed"))}function toggleAll(v){document.querySelectorAll(".sidebar-section-content").forEach(function(e){v?e.classList.remove("collapsed"):e.classList.add("collapsed")});document.querySelectorAll(".sidebar-section-title").forEach(function(e){v?e.classList.remove("collapsed"):e.classList.add("collapsed")})}</script>
+</body>
+</html>
