@@ -64,7 +64,7 @@ const SECTIONS = [
     { type: 'group', name: '综述' },
     { type: 'link', name: '李飞飞 Agent AI 综述', file: 'papers/surveys/li-agent-ai-survey.html' },
     { type: 'group', name: '经典论文' },
-    { type: 'link', name: 'ReAct: Reasoning + Acting', file: 'papers/classics/react.html' },
+    { type: 'link', name: 'ReAct: Reasoning + Acting（全文翻译）', file: 'papers/classics/react-paper.html' },
     { type: 'link', name: 'Generative Agents (AI小镇)', file: 'papers/classics/generative-agents.html' },
   ]},
   { name: 'Frameworks', items: [

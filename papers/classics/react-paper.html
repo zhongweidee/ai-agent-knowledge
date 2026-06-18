@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReAct: 协同推理与行动于语言模型 - AI Agent 知识库</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif; color:#333; line-height:1.6; background:#f5f5f5; }
+.layout { display:flex; min-height:100vh; }
+.sidebar { width:280px; background:#1a1a2e; color:#ccc; padding:0 0 20px 0; position:fixed; top:0; left:0; height:100vh; overflow-y:auto; flex-shrink:0; }
+.sidebar-header { padding:16px 20px 8px; border-bottom:1px solid #333; margin-bottom:8px; }
+.sidebar-header h2 { color:#e94560; font-size:16px; display:inline; }
+.sidebar-header a { color:#e94560; text-decoration:none; }
+.sidebar-tools { display:inline; float:right; }
+.sidebar-tools button { background:none; border:1px solid #555; color:#aaa; cursor:pointer; padding:0 7px; margin-left:3px; border-radius:3px; font-size:16px; font-weight:700; line-height:1.3; font-family:monospace; }
+.sidebar-tools button:hover { background:#333; color:#fff; }
+.sidebar-section { border-bottom:1px solid #222; }
+.sidebar-section-title { color:#e0e0e0; font-weight:600; font-size:12.5px; padding:8px 20px; cursor:pointer; user-select:none; display:flex; justify-content:space-between; align-items:center; text-transform:uppercase; letter-spacing:0.5px; }
+.sidebar-section-title:hover { background:#222; }
+.sidebar-section-title .toggle { color:#666; font-size:10px; transition:transform 0.2s; }
+.sidebar-section-title.collapsed .toggle { transform:rotate(-90deg); }
+.sidebar-section-content { overflow:hidden; transition:max-height 0.2s ease; }
+.sidebar-section-content.collapsed { max-height:0 !important; }
+.sidebar a { color:#9ba3b4; text-decoration:none; font-size:12.5px; display:block; padding:3px 20px 3px 28px; }
+.sidebar a:hover { color:#e94560; background:#222; }
+.sidebar a.active { color:#e94560; font-weight:500; background:#222; }
+.sidebar-group-label { color:#888; font-size:11px; padding:6px 20px 2px 24px; text-transform:uppercase; letter-spacing:0.3px; }
+.content { margin-left:280px; flex:1; max-width:960px; padding:40px 60px; background:#fff; min-height:100vh; }
+.content h1 { font-size:32px; font-weight:700; margin-bottom:20px; padding-bottom:12px; border-bottom:3px solid #e94560; color:#1a1a1a; }
+.content h2 { font-size:24px; font-weight:600; margin:32px 0 12px; color:#1a1a1a; border-bottom:1px solid #eee; padding-bottom:6px; }
+.content h3 { font-size:20px; font-weight:600; margin:24px 0 10px; color:#2a2a2a; }
+.content h4 { font-size:16px; font-weight:600; margin:20px 0 8px; }
+.content p { margin:0 0 14px; font-size:15px; }
+.content a { color:#0078d4; text-decoration:none; }
+.content a:hover { text-decoration:underline; }
+.content code { font-family:'Cascadia Code','Fira Code','Consolas',monospace; background:#f0f0f0; padding:2px 6px; border-radius:3px; font-size:13px; }
+.content pre { background:#1e1e1e; color:#d4d4d4; padding:16px; border-radius:6px; overflow-x:auto; margin:14px 0; }
+.content pre code { background:none; padding:0; color:inherit; font-size:13px; line-height:1.5; }
+.content table { border-collapse:collapse; margin:14px 0; width:100%; font-size:14px; }
+.content th, .content td { border:1px solid #ddd; padding:8px 12px; text-align:left; }
+.content th { background:#f8f8f8; font-weight:600; }
+.content tr:nth-child(even) td { background:#fafafa; }
+.content blockquote { border-left:4px solid #e94560; padding:8px 16px; margin:14px 0; background:#fef0f3; border-radius:0 4px 4px 0; }
+.content blockquote p { margin:0; }
+.content img { max-width:100%; border-radius:4px; margin:14px 0; border:1px solid #e0e0e0; }
+.content hr { border:none; border-top:1px solid #eee; margin:24px 0; }
+.content ul, .content ol { margin:0 0 14px; padding-left:24px; font-size:15px; }
+.content li { margin-bottom:4px; }
+.content .tag { display:inline-block; background:#e94560; color:#fff; font-size:11px; padding:2px 8px; border-radius:3px; margin-right:4px; }
+.content .tag-blue { background:#0078d4; }
+.content .tag-green { background:#28a745; }
+.content .info-box { background:#f0f7ff; border:1px solid #0078d4; border-radius:6px; padding:16px; margin:14px 0; }
+.content .info-box-title { font-weight:600; color:#0078d4; margin-bottom:6px; }
+@media (max-width:768px) { .sidebar { display:none; } .content { margin-left:0; padding:20px; } }
+</style>
+</head>
+<body>
+<div class="layout">
+  <div class="sidebar"><div class="sidebar-header"><h2><a href="../../index.html">🤖 AI Agent 知识库</a></h2>
+<div class="sidebar-tools"><button onclick="toggleAll(true)" title="展开">+</button><button onclick="toggleAll(false)" title="折叠">−</button></div></div>
+<div class="sidebar-section"><div class="sidebar-section-title" onclick="ts('s-papers')"><span>Papers</span><span class="toggle">▼</span></div><div id="s-papers" class="sidebar-section-content"><div class="sidebar-group-label">综述</div>
+<a href="../../papers/surveys/li-agent-ai-survey.html" class="">李飞飞 Agent AI 综述</a>
+<div class="sidebar-group-label">经典论文</div>
+<a href="../../papers/classics/react-paper.html" class="active">ReAct: Reasoning + Acting（全文翻译）</a>
+<a href="../../papers/classics/generative-agents.html" class="">Generative Agents (AI小镇)</a>
+</div></div>
+<div class="sidebar-section"><div class="sidebar-section-title" onclick="ts('s-frameworks')"><span>Frameworks</span><span class="toggle">▼</span></div><div id="s-frameworks" class="sidebar-section-content"><a href="../../frameworks/comparison.html" class="">框架对比与选型指南</a>
+</div></div>
+<div class="sidebar-section"><div class="sidebar-section-title" onclick="ts('s-tutorials')"><span>Tutorials</span><span class="toggle">▼</span></div><div id="s-tutorials" class="sidebar-section-content"><a href="../../tutorials/building-effective-agents.html" class="">Building Effective Agents</a>
+<a href="../../tutorials/chip-huyen-agents.html" class="">Agents - Chip Huyen</a>
+<a href="../../tutorials/lilian-weng-llm-agent.html" class="">LLM Powered Autonomous Agents</a>
+</div></div>
+<div class="sidebar-section"><div class="sidebar-section-title" onclick="ts('s-glossary')"><span>Glossary</span><span class="toggle">▼</span></div><div id="s-glossary" class="sidebar-section-content"><a href="../../glossary/glossary.html" class="">术语表</a>
+</div></div>
+<div class="sidebar-section"><div class="sidebar-section-title" onclick="ts('s-resources')"><span>Resources</span><span class="toggle">▼</span></div><div id="s-resources" class="sidebar-section-content"><a href="../../references/learning-path.html" class="">学习路线</a>
+</div></div>
+</div>
+  <div class="content">
+    <div class="breadcrumb"><a href="../../index.html">首页</a></div>
+<h1>ReAct: 协同推理与行动于语言模型</h1>
+<h2>ReAct: Synergizing Reasoning and Acting in Language Models</h2>
+
+<div class="ltx_authors">
+<p><strong>Shunyu Yao</strong><sup>1</sup>, <strong>Jeffrey Zhao</strong><sup>2</sup>, <strong>Dian Yu</strong><sup>2</sup>, <strong>Nan Du</strong><sup>2</sup>, <strong>Izhak Shafran</strong><sup>2</sup>, <strong>Karthik Narasimhan</strong><sup>1</sup>, <strong>Yuan Cao</strong><sup>2</sup></p>
+<p><sup>1</sup> 普林斯顿大学 (Princeton University) &nbsp; <sup>2</sup> 谷歌 (Google)</p>
+<p>项目网站与代码: <a href="https://react-lm.github.io/">https://react-lm.github.io/</a></p>
+<p>通讯: {shunyuy,karthikn}@princeton.edu, {jeffreyzhao,dianyu,dunan,izhak,yuancao}@google.com</p>
+</div>
+
+<hr>
+
+<h2>摘要 (Abstract)</h2>
+
+<p>虽然大型语言模型（LLM）在语言理解和交互式决策任务中展现了令人印象深刻的能力，但它们的推理能力（例如思维链提示，chain-of-thought prompting）和行动能力（例如行动计划生成，action plan generation）主要被作为独立的课题来研究。在本文中，我们探索了使用 LLM 以交错方式生成推理轨迹（reasoning traces）和任务特定行动（task-specific actions），使两者之间产生更强的协同效应：推理轨迹帮助模型归纳、追踪和更新行动计划以及处理异常情况，而行动则允许模型与外部资源（如知识库或环境）交互并收集额外信息。我们将我们的方法命名为 <strong>ReAct</strong>，应用于多种语言和决策任务，并展示其在最先进基线方法上的有效性，以及相比无推理或无行动组件的方法在人类可解释性和可信度方面的提升。具体而言，在问答（HotpotQA）和事实验证（Fever）任务上，ReAct 通过与一个简单的 Wikipedia API 交互，克服了思维链推理中普遍存在的幻觉（hallucination）和错误传播（error propagation）问题，并生成类似人类的任务解决轨迹，其可解释性优于无推理轨迹的基线方法。此外，在两个交互式决策基准（ALFWorld 和 WebShop）上，ReAct 以仅一个或两个上下文示例（in-context examples）进行提示，即以绝对成功率分别提升 34% 和 10% 的表现，超越了模仿学习和强化学习方法。</p>
+
+<hr>
+
+<h2>1 引言 (Introduction)</h2>
+
+<p>人类智能的一个独特特征是能够将任务导向的行动与语言推理（或内部言语，inner speech，Alderson-Day & Fernyhough, 2015）无缝结合。理论研究表明，这种能力在人类认知中起着重要作用，能够实现自我调节或策略制定（Vygotsky, 1987; Luria, 1965; Fernyhough, 2010）以及维持工作记忆（Baddeley, 1992）。以在厨房烹饪为例，在两个具体行动之间，我们可能会用语言进行推理以跟踪进度（"现在所有东西都切好了，我应该烧开水"），处理异常或根据情况调整计划（"我没有盐了，那就用酱油和胡椒代替"），以及意识到何时需要外部信息（"如何做面团？让我上网查一下"）。我们也可以采取行动（打开烹饪书阅读食谱、打开冰箱、检查食材）来支持推理并回答问题（"我现在能做什么菜？"）。这种"行动"与"推理"之间的紧密协同使人类能够快速学习新任务，并在即使前所未见的情况或面对信息不确定性时执行稳健的决策或推理。</p>
+
+<p>近期的研究结果暗示了在自主系统中将语言推理与交互式决策相结合的可能性。一方面，经过适当提示的大型语言模型展现出了涌现能力（emergent capabilities），能够在算术、常识和符号推理任务中执行多步推理轨迹，从而从问题中推导出答案（Wei et al., 2022）。然而，这种"思维链"（chain-of-thought）推理是一个静态黑箱——模型使用自己的内部表征来生成思维，并未与外部世界建立联系，这限制了其反应性推理或更新知识的能力。这可能导致推理过程中出现事实幻觉和错误传播等问题（图 1(1b)）。另一方面，最近的工作探索了使用预训练语言模型进行交互式环境中的规划和行动（Ahn et al., 2022; Nakano et al., 2021; Yao et al., 2020; Huang et al., 2022a），重点是通过语言先验来预测行动。这些方法通常将多模态观察转换为文本，使用语言模型生成领域特定的行动或计划，然后使用控制器来选择或执行它们。然而，除了 Huang et al.（2022b）执行了一种有限形式的语言推理以重申关于当前状态的空间事实外，它们并未使用语言模型来抽象地推理高层目标或维持工作记忆以支持行动。除了这种与少数物体交互的简单具身任务外，尚未有研究探讨推理和行动如何以协同方式结合以解决一般任务，以及这种结合是否能相比单独的推理或行动带来系统性收益。</p>
+
+<figure>
+<img src="https://ar5iv.labs.arxiv.org/html/2210.03629/assets/x1.png" alt="图1" width="422" height="345">
+<figcaption><strong>图 1:</strong> (1) 四种提示方法的比较，(a) 标准提示 (Standard)，(b) 思维链 (CoT, 仅推理)，(c) 仅行动 (Act-only)，和 (d) ReAct (推理+行动)，解决一个 HotpotQA (Yang et al., 2018) 问题。(2) (a) 仅行动和 (b) ReAct 提示解决一个 AlfWorld (Shridhar et al., 2020b) 游戏的比较。在两个领域中，我们省略了提示中的上下文示例，只显示由模型 (行动 Act、思维 Thought) 和环境 (观察 Obs) 生成的任务解决轨迹。</figcaption>
+</figure>
+
+<p>在本文中，我们提出 <strong>ReAct</strong>，一个将推理和行动与语言模型相结合用于解决多种语言推理和决策任务的通用范式（图 1）。ReAct 提示 LLM 以交错方式生成与任务相关的语言推理轨迹和行动，使模型能够执行动态推理以创建、维护和调整用于行动的高层计划（推理促进行动，reason to act），同时也能与外部环境（如 Wikipedia）交互以将额外信息纳入推理（行动促进推理，act to reason）。</p>
+
+<p>我们在四个不同的基准上对 ReAct 和最先进的基线方法进行了实证评估：问答（HotPotQA, Yang et al., 2018）、事实验证（Fever, Thorne et al., 2018）、基于文本的游戏（ALFWorld, Shridhar et al., 2020b）和网页导航（WebShop, Yao et al., 2022）。对于 HotPotQA 和 Fever，在模型可以与之交互的 Wikipedia API 的访问下，ReAct 优于普通的行动生成模型，同时与思维链推理（CoT, Wei et al., 2022）具有竞争力。总体上最佳的方法是 ReAct 和 CoT 的组合，允许在推理过程中同时使用内部知识和外部获取的信息。在 ALFWorld 和 WebShop 上，两个甚至一个样本的 ReAct 提示能够超越使用 10<sup>3</sup>~10<sup>5</sup> 个任务实例训练的模仿学习或强化学习方法，在成功率上分别绝对提升了 34% 和 10%。我们还通过在决策任务中展示相对于仅行动的对照基线的一致优势，证明了稀疏的、多功能的推理在决策中的重要性。除了通用性和性能提升外，推理与行动的结合还有助于模型在所有领域的可解释性、可信度和可诊断性，因为人类可以轻松区分来自模型内部知识与外部环境的信息，并检查推理轨迹以理解模型行动的决策基础。</p>
+
+<p>总结而言，我们的主要贡献如下：(1) 我们提出了 ReAct，一种新颖的基于提示的范式，用于在语言模型中协同推理和行动以支持通用任务解决；(2) 我们在多种基准上进行了广泛的实验，展示了 ReAct 在少样本学习设置中相对于先前孤立执行推理或行动生成的方法的优势；(3) 我们进行了系统的消融和分析，以理解行动在推理任务中的重要性，以及推理在交互任务中的重要性；(4) 我们分析了 ReAct 在提示设置下的局限性（即推理和行动行为的有限支持），并进行了初步的微调实验，展示了 ReAct 通过额外训练数据进一步改进的潜力。将 ReAct 扩展到更多的任务上进行训练和运行，并将其与强化学习等互补范式相结合，可能进一步释放大型语言模型的潜力。</p>
+
+<hr>
+
+<h2>2 ReAct: 协同推理 + 行动</h2>
+
+<p>考虑一个智能体（agent）与环境交互以解决任务的一般设置。在时间步 <i>t</i>，智能体从环境接收观察 <i>o<sub>t</sub></i> ∈ <i>O</i>，并根据某个策略 <i>&pi;(a<sub>t</sub>|c<sub>t</sub>)</i> 采取行动 <i>a<sub>t</sub></i> ∈ <i>A</i>，其中 <i>c<sub>t</sub> = (o<sub>1</sub>, a<sub>1</sub>, ..., o<sub>t-1</sub>, a<sub>t-1</sub>, o<sub>t</sub>)</i> 是智能体的<em>上下文（context）</em>。当映射 <i>c<sub>t</sub> → a<sub>t</sub></i> 高度隐式且需要大量计算时，学习策略是具有挑战性的。例如，图 1(1c) 中的智能体无法生成正确的最终行动（Act 4）来完成 QA 任务，因为它需要对轨迹上下文（问题、Act 1-3、Obs 1-3）进行复杂的推理。类似地，图 1(2a) 中的智能体未能从上下文中理解水槽 1 不包含胡椒瓶 1，因此不断产生幻觉行动。</p>
+
+<p>ReAct 的想法很简单：我们将智能体的行动空间（action space）扩展为 <i>Â = A ∪ L</i>，其中 <i>L</i> 是语言空间（language space）。语言空间中的行动 <i>â<sub>t</sub></i> ∈ <i>L</i>（我们将称之为<em>思维（thought）</em>或<em>推理轨迹（reasoning trace）</em>）不会影响外部环境，因此不会产生观察反馈。相反，思维 <i>â<sub>t</sub></i> 旨在通过对当前上下文 <i>c<sub>t</sub></i> 进行推理来组合有用信息，并更新上下文 <i>c<sub>t+1</sub> = (c<sub>t</sub>, â<sub>t</sub>)</i> 以支持未来的推理或行动。如图 1 所示，可以有各种类型的有效思维，例如分解任务目标并创建行动计划（2b, Act 1; 1d, Thought 1）、注入与任务解决相关的常识知识（2b, Act 1）、从观察中提取重要部分（1d, Thought 2, 4）、跟踪进度和转换行动计划（2b, Act 8）、处理异常并调整行动计划（1d, Thought 3）等。</p>
+
+<p>然而，由于语言空间 <i>L</i> 是无限的，在这种扩展的行动空间中学习是困难的，需要强大的语言先验。在本文中，我们主要关注以下设置：一个冻结的大型语言模型 PaLM-540B（Chowdhery et al., 2022）<sup><a href="#fn1">1</a></sup> 通过少样本上下文示例进行提示，以生成领域特定的行动和自由形式的语言思维，用于任务解决（图 1 (1d), (2b)）。每个上下文示例是一个包含行动、思维和环境观察的人类轨迹，用于解决一个任务实例（见附录 C）。对于推理为主要任务的情况（图 1(1)），我们交替生成思维和行动，使得任务解决轨迹由多个思维-行动-观察步骤组成。相比之下，对于可能涉及大量行动的决策任务（图 1(2)），思维只需要稀疏地出现在轨迹中最相关的位置，因此我们让语言模型自行决定思维和行动的异步出现。</p>
+
+<p>由于决策和推理能力集成在一个大型语言模型中，ReAct 具有几个独特的特性：</p>
+
+<p><strong>A) 直观且易于设计：</strong> 设计 ReAct 提示是直接的，因为人类标注者只需在采取的行动之上用语言记录他们的思维。本文中未使用任何特设的格式选择、思维设计或示例选择。我们将在第 3 节和第 4 节中详细说明每个任务的提示设计。</p>
+
+<p><strong>B) 通用且灵活：</strong> 由于灵活的思维空间和思维-行动出现格式，ReAct 适用于具有不同行动空间和推理需求的多种任务，包括但不限于 QA、事实验证、文本游戏和网页导航。</p>
+
+<p><strong>C) 高性能且鲁棒：</strong> ReAct 在仅从一到六个上下文示例中学习的情况下，展现出对新任务实例的强泛化能力，在不同领域中始终优于仅推理或仅行动的基线方法。我们还在第 3 节中展示了当启用微调时的额外收益，并在第 4 节中展示了 ReAct 的性能对提示选择具有鲁棒性。</p>
+
+<p><strong>D) 符合人类认知且可控：</strong> ReAct 提供可解释的顺序决策和推理过程，人类可以轻松检查推理和事实的正确性。此外，人类还可以通过思维编辑在运行中控制或纠正智能体的行为，如第 4 节图 5 所示。</p>
+
+<hr>
+
+<h2>3 知识密集型推理任务 (Knowledge-Intensive Reasoning Tasks)</h2>
+
+<p>我们从知识密集型推理任务开始，如多跳问答和事实验证。如图 1(1d) 所示，通过与 Wikipedia API 交互，ReAct 能够检索信息以支持推理，同时利用推理来确定下一步检索的目标，展示了推理和行动的协同效应。</p>
+
+<h3>3.1 设置 (Setup)</h3>
+
+<h4>领域 (Domains)</h4>
+<p>我们考虑两个挑战知识检索和推理的数据集：(1) HotPotQA (Yang et al., 2018)，一个需要推理两个或更多 Wikipedia 段落的多跳问答基准；以及 (2) FEVER (Thorne et al., 2018)，一个事实验证基准，其中每个声明根据是否存在 Wikipedia 段落来验证，被标注为 SUPPORTS（支持）、REFUTES（反驳）或 NOT ENOUGH INFO（信息不足）。在本文中，我们对两个任务采用仅输入问题（question-only）的设置，模型仅接收问题/声明作为输入，无法访问支持段落，必须依靠内部知识或通过与外部环境交互来检索知识以支持推理。</p>
+
+<h4>行动空间 (Action Space)</h4>
+<p>我们设计了一个简单的 Wikipedia Web API，具有三种类型的行动来支持交互式信息检索：
+(1) <strong>search</strong>[<code>entity</code>]——如果相应的 <code>entity</code> Wikipedia 页面存在，则返回前 5 个句子，否则从 Wikipedia 搜索引擎建议前 5 个相似实体；
+(2) <strong>lookup</strong>[<code>string</code>]——返回页面中包含 <code>string</code> 的下一个句子，模拟浏览器上的 Ctrl+F 功能；
+(3) <strong>finish</strong>[<code>answer</code>]——用 <code>answer</code> 完成当前任务。
+我们注意到，这个行动空间大多只能根据精确的段落名称检索段落的一小部分，这比最先进的词法或神经检索器弱得多。其目的是模拟人类如何与 Wikipedia 交互，并迫使模型通过语言中的显式推理进行检索。</p>
+
+<h3>3.2 方法 (Methods)</h3>
+
+<h4>ReAct 提示 (ReAct Prompting)</h4>
+<p>对于 HotpotQA 和 Fever，我们从训练集中随机选择 6 个和 3 个案例<sup><a href="#fn2">2</a></sup>，并手动编写 ReAct 格式的轨迹作为提示中的少样本示例。类似于图 1(d)，每个轨迹由多个思维-行动-观察步骤组成（即密集思维，dense thought），其中自由形式的思维用于多种目的。具体而言，我们使用了以下几种思维的组合：分解问题（"我需要搜索 x，找到 y，然后找到 z"）、从 Wikipedia 观察中提取信息（"x 始于 1844 年"、"该段落没有提到 x"）、执行常识（"x 不是 y，所以 z 必须是..."）或算术推理（"1844 < 1989"）、指导搜索重新表述（"也许我可以搜索/查找 x 来替代"）以及综合最终答案（"......所以答案是 x"）。更多细节见附录 C。</p>
+
+<h4>基线方法 (Baselines)</h4>
+<p>我们系统地消融 ReAct 轨迹，为多个基线方法构建提示（格式如图 1(1a-1c)）：
+(a) <strong>标准提示 (Standard prompting)</strong> (<code>Standard</code>)——移除 ReAct 轨迹中的所有思维、行动和观察。
+(b) <strong>思维链提示 (Chain-of-thought prompting)</strong> (<code>CoT</code>) (Wei et al., 2022)——移除行动和观察，作为一个仅推理的基线。我们还构建了一个自一致性基线（<code>CoT-SC</code>）(Wang et al., 2022a, b)，通过在推理过程中以解码温度 0.7 采样 21 个 CoT 轨迹并采用多数答案，这被发现能持续提升 CoT 的性能。
+(c) <strong>仅行动提示 (Acting-only prompt)</strong> (<code>Act</code>)——移除 ReAct 轨迹中的思维，大致类似于 WebGPT (Nakano et al., 2021) 与互联网交互以回答问题的方式，尽管它在不同的任务和行动空间上运行，并使用模仿学习和强化学习而非提示。</p>
+
+<h4>结合内部与外部知识 (Combining Internal and External Knowledge)</h4>
+<p>如第 3.3 节所详述，我们观察到 ReAct 展示的问题解决过程更加基于事实和接地（grounded），而 CoT 在构建推理结构方面更准确，但容易遭受幻觉化事实或思维的影响。因此，我们提出结合 ReAct 和 CoT-SC，让模型根据以下启发式方法决定何时切换到另一种方法：</p>
+<p>A) <strong>ReAct → CoT-SC</strong>：当 ReAct 在给定步骤内未能返回答案时，退回到 CoT-SC。我们对 HotpotQA 和 FEVER 分别设置 7 步和 5 步，因为我们发现更多步骤不会改善 ReAct 的性能<sup><a href="#fn3">3</a></sup>。</p>
+<p>B) <strong>CoT-SC → ReAct</strong>：当 <i>n</i> 个 CoT-SC 样本中的多数答案出现次数少于 <i>n/2</i> 次时（即内部知识可能不足以自信地支持该任务），退回到 ReAct。</p>
+
+<h4>微调 (Finetuning)</h4>
+<p>由于大规模手动标注推理轨迹和行动的挑战，我们考虑了一种类似于 Zelikman et al. (2022) 的自举（bootstrap）方法，使用由 ReAct 生成的 3,000 个包含正确答案的轨迹（也用于其他基线方法）来微调较小的语言模型（PaLM-8/62B），使其在输入问题/声明的条件下解码轨迹（所有思维、行动和观察）。更多细节见附录 B.1。</p>
+
+<h3>3.3 结果与观察 (Results and Observations)</h3>
+
+<h4>ReAct 持续优于 Act</h4>
+<p>表 1 显示了使用 PaLM-540B 作为基础模型并采用不同提示方法的 HotpotQA 和 Fever 结果。我们注意到 ReAct 在两个任务上都优于 Act，这证明了推理在指导行动方面的价值，特别是在综合最终答案方面，如图 1 (1c-d) 所示。微调结果（图 3）也证实了推理轨迹对更明智的行动的益处。</p>
+
+<figure>
+<table>
+<tr><th rowspan="2">提示方法</th><th colspan="2" style="text-align:center">HotpotQA (EM)</th><th>Fever (Acc)</th></tr>
+<tr><td style="text-align:center">(EM)</td><td style="text-align:center">(Acc)</td></tr>
+<tr><td><code>Standard</code></td><td style="text-align:center">28.7</td><td style="text-align:center">57.1</td></tr>
+<tr><td><code>CoT</code> (Wei et al., 2022)</td><td style="text-align:center">29.4</td><td style="text-align:center">56.3</td></tr>
+<tr><td><code>CoT-SC</code> (Wang et al., 2022a)</td><td style="text-align:center">33.4</td><td style="text-align:center">60.4</td></tr>
+<tr><td><code>Act</code></td><td style="text-align:center">25.7</td><td style="text-align:center">58.9</td></tr>
+<tr><td>ReAct</td><td style="text-align:center">27.4</td><td style="text-align:center">60.9</td></tr>
+<tr><td><code>CoT-SC</code> → ReAct</td><td style="text-align:center">34.2</td><td style="text-align:center"><strong>64.6</strong></td></tr>
+<tr><td>ReAct → <code>CoT-SC</code></td><td style="text-align:center"><strong>35.1</strong></td><td style="text-align:center">62.0</td></tr>
+<tr><td><strong>有监督 SOTA</strong><sup><a href="#fn4">4</a></sup></td><td style="text-align:center">67.5</td><td style="text-align:center">89.5</td></tr>
+</table>
+<figcaption><strong>表 1:</strong> PaLM-540B 在 HotpotQA 和 Fever 上的提示结果。</figcaption>
+</figure>
+
+<figure>
+<img src="https://ar5iv.labs.arxiv.org/html/2210.03629/assets/x2.png" alt="图2a" width="207" height="207">
+<img src="https://ar5iv.labs.arxiv.org/html/2210.03629/assets/x3.png" alt="图2b" width="207" height="207">
+<figcaption><strong>图 2:</strong> PaLM-540B 提示结果相对于使用的 CoT-SC 样本数量的变化。</figcaption>
+</figure>
+
+<h4>ReAct 对比 CoT</h4>
+<p>另一方面，ReAct 在 Fever 上优于 CoT（60.9 vs. 56.3），在 HotpotQA 上略低于 CoT（27.4 vs. 29.4）。Fever 的 SUPPORTS/REFUTES 声明可能只在细微程度上有所不同（见附录 D.1），因此通过行动检索准确和最新的知识至关重要。为了更好地理解 ReAct 和 CoT 在 HotpotQA 上的行为差异，我们分别从 ReAct 和 CoT 中随机抽样了 50 个答案正确和 50 个答案错误的轨迹（因此总共 200 个示例），并手动标注了它们的成功和失败模式，见下表：</p>
+
+<figure>
+<table>
+<tr><th></th><th>类型</th><th>定义</th><th>ReAct</th><th>CoT</th></tr>
+<tr><td rowspan="2">成功</td><td>真正例</td><td>正确的推理轨迹和事实</td><td>94%</td><td>86%</td></tr>
+<tr><td>假正例</td><td>幻觉化的推理轨迹或事实</td><td>6%</td><td>14%</td></tr>
+<tr><td rowspan="4">失败</td><td>推理错误</td><td>错误的推理轨迹（包括无法从重复步骤中恢复）</td><td>47%</td><td>16%</td></tr>
+<tr><td>搜索结果错误</td><td>搜索返回空结果或不包含有用信息</td><td>23%</td><td>-</td></tr>
+<tr><td>幻觉</td><td>幻觉化的推理轨迹或事实</td><td>0%</td><td>56%</td></tr>
+<tr><td>标签歧义</td><td>预测正确但与标签不完全匹配</td><td>29%</td><td>28%</td></tr>
+</table>
+<figcaption><strong>表 2:</strong> ReAct 和 CoT 在 HotpotQA 上的成功和失败模式类型及其在人工研究随机选取示例中的百分比。</figcaption>
+</figure>
+
+<p>一些关键观察如下：</p>
+<p><strong>A) 幻觉是 CoT 的一个严重问题</strong>，导致其在成功模式中的假正例率远高于 ReAct（14% vs. 6%），并且构成了其主要失败模式（56%）。相比之下，ReAct 的问题解决轨迹更加接地、基于事实且可信，这得益于对外部知识库的访问。</p>
+
+<p><strong>B) 虽然交错推理、行动和观察步骤提高了 ReAct 的接地性和可信度，这种结构约束也降低了其在制定推理步骤方面的灵活性</strong>，导致其推理错误率高于 CoT。我们注意到 ReAct 有一种频繁的错误模式，即模型重复生成先前的思维和行动，我们将其归类为"推理错误"的一部分，因为模型未能推理出应该采取的下一步正确行动并跳出循环<sup><a href="#fn5">5</a></sup>。</p>
+
+<p><strong>C) 对于 ReAct，成功通过搜索检索到信息性知识至关重要。</strong> 非信息性搜索占错误案例的 23%，会破坏模型推理并使其难以恢复和重新制定思维。这可能是事实性与灵活性之间的一种预期权衡，这也激发了我们将两种方法结合的策略。</p>
+
+<p>我们在附录 E.1 中提供了每种成功和失败模式的示例。我们还发现一些 HotpotQA 问题可能包含过时的答案标签，例如见图 4。</p>
+
+<h4>ReAct + CoT-SC 在 LLM 提示中表现最佳</h4>
+<p>同样如表 1 所示，HotpotQA 和 Fever 上最佳的提示方法分别是 ReAct → CoT-SC 和 CoT-SC → ReAct。此外，图 1 显示了不同方法相对于使用的 CoT-SC 样本数量的表现。虽然两种 ReAct + CoT-SC 方法各自在一个任务上有优势，但它们在不同样本数量下都显著且持续优于 CoT-SC，仅使用 3-5 个样本就达到了 CoT-SC 使用 21 个样本的性能。这些结果表明，在推理任务中适当结合模型内部知识和外部知识的价值。</p>
+
+<figure>
+<img src="https://ar5iv.labs.arxiv.org/html/2210.03629/assets/x4.png" alt="图3" width="321" height="135">
+<figcaption><strong>图 3:</strong> 使用 ReAct（我们的方法）和基线方法在 HotPotQA 上提示和微调的扩展结果。</figcaption>
+</figure>
+
+<h4>ReAct 在微调中表现最佳</h4>
+<p>图 3 显示了四种方法（Standard、CoT、Act、ReAct）在 HotpotQA 上的提示/微调扩展效果。使用 PaLM-8/62B 时，由于从上下文示例中同时学习推理和行动的困难，ReAct 提示在四种方法中表现最差。然而，当仅使用 3,000 个示例进行微调时，ReAct 成为四种方法中最好的：微调后的 PaLM-8B ReAct 超越了所有 PaLM-62B 提示方法，微调后的 PaLM-62B ReAct 超越了所有 540B 提示方法。相比之下，微调 Standard 或 CoT 的效果远差于微调 ReAct 或 Act（对于 PaLM-8/62B 均如此），因为前者本质上是教模型记忆（可能幻觉化的）知识事实，而后者教模型如何（推理和）行动以从 Wikipedia 获取信息——这是一种更具泛化性的知识推理技能。由于所有提示方法仍与领域特定的最先进方法相去甚远（表 1），我们相信使用更多人工编写的数据进行微调可能是释放 ReAct 能力的更好方式。</p>
+
+<hr>
+
+<h2>4 决策任务 (Decision Making Tasks)</h2>
+
+<p>我们还在两个基于语言的交互式决策任务上测试了 ReAct：ALFWorld 和 WebShop，两者都具有复杂的环-境，要求智能体在长时间跨度内行动并获得稀疏奖励，这需要推理来有效地行动和探索。</p>
+
+<h4>ALFWorld</h4>
+<p>ALFWorld (Shridhar et al., 2020b) 是一个基于文本的交互式游戏，与具身环境 ALFRED (Shridhar et al., 2020a) 并行。该环境包含 6 种类型任务（如"检查 XXX"、"加热 YYY 并放在 ZZZ 处"），每个任务涉及在多个房间（如客厅、卧室）中导航并与物体（如台灯、砧板）交互。该环境拥有丰富的动作空间，包括导航（如去橱柜）、物体操作（如拿起 XXX）、和对象状态（如切片、加热）。该任务要求模型在设定的最大步数内完成任务目标。我们构建了一个简单的 ReAct 格式提示，包含一个上下文示例，用于说明问题解决格式，并在推理时使用该提示来生成轨迹，允许模型自我决定何时生成思维（如图 1(2b) 所示）。</p>
+
+<p>基线方法包括：(1) 使用相同格式但移除思维的仅行动（Act）基线（如图 1(2a)）；(2) 一种"内部独白"风格的基线（ReAct-IM），其中我们通过插入环境反馈作为文本注入来近似 Huang et al. (2022b) 的方法；(3) 使用 Butter 代理 (Shridhar et al., 2020b) 的模仿学习（IL），该代理使用基于网络的规划器进行行为克隆训练；以及 (4) 使用强化学习的基于文本的决策方法 (Zhong et al., 2021)。</p>
+
+<h4>WebShop</h4>
+<p>WebShop (Yao et al., 2022) 是一个在模拟电商网站上拥有约 118 万种真实世界产品的交互式网页环境。给定一个用语言描述的用户指令（如"我需要一个价格在 50 到 100 美元之间的落地灯，颜色要浅褐色"），智能体需要浏览商店网页并最终选择合适的产品或放弃搜索。提示示例利用了两种类型的行动：search（搜索）和 click（点击），并混合了思维，如图 1(2b) 所示。搜索返回包含被点击产品的网页；点击可以在产品描述之间浏览、查看其信息以及最终选择产品。我们与模仿学习 (IL) 和强化学习 (RL) 方法 (Yao et al., 2022) 以及仅行动的提示基线进行了比较。</p>
+
+<h4>结果</h4>
+<p>表 3 和表 4 分别展示了 ALFWorld 和 WebShop 的结果。我们的主要观察结果是：</p>
+
+<p><strong>1) ReAct 显著优于所有基线方法</strong>，在 ALFWorld 上比模仿学习高 34%，在 WebShop 上比模仿学习高 10%。在与完全监督方法（模仿学习）或强化学习方法的比较中尤其令人印象深刻，因为我们用每个任务最多两个示例提示 ReAct（ALFWorld 中使用一个示例，WebShop 中使用两个示例），而基线方法分别在 2,303 个（ALFWorld）和 12,487 个（WebShop）任务实例上训练。这些结果验证了将语言模型中的推理和行动相结合可以显著提高少样-本决策的效果。</p>
+
+<p><strong>2) ReAct 始终优于仅行动 (Act) 和 ReAct-IM 基线</strong>，这突出了推理的重要性。我们在不同使用的上下文示例数量下观察到一致的优势（附录 A.1 中 GPT-3 的结果也显示了与 Act 相比 ReAct 的提升）。ReAct 与仅行动之间最大的定性差异是，ReAct 能够明确推理出要关注哪些子目标、如何从反馈中调整策略以及何时完成任务。相比之下，Act 代理经常被困在重复性行动中，产生不现实的行动序列，并且不清楚在达到目标后何时终止。ReAct-IM 虽然利用了外部反馈，并没有真正的"内部推理"，而是仅对环境观察进行转述，这一观察也得到了 Huang et al. (2022b) 的认可。关于 ReAct 和 ReAct-IM 之间差异的更多讨论和示例见附录 D.2。</p>
+
+<p><strong>3) ReAct 的性能对提示设计具有鲁棒性</strong>。我们针对 WebShop 进行了消融研究（表 4），改变了指示思维出现的示例选择。不同选择之间的成功率和得分只有微小变化（详情见附录 C.3）。这表明 ReAct 允许在提示选择上具有灵活性，至少对于决策任务来说，不同的思维方式在少量示例中都可以发挥作用。</p>
+
+<figure>
+<table>
+<tr><th>方法</th><th>成功率 (%)</th></tr>
+<tr><td>Act (提示)</td><td>45</td></tr>
+<tr><td>ReAct-IM (提示)</td><td>55</td></tr>
+<tr><td><strong>ReAct (提示) (ours)</strong></td><td><strong>67</strong></td></tr>
+<tr><td>模仿学习 (Butter)</td><td>33</td></tr>
+<tr><td>强化学习 (Zhong et al.)</td><td>32</td></tr>
+</table>
+<figcaption><strong>表 3:</strong> ALFWorld 结果。ReAct 使用一个上下文示例进行提示。所有基线结果来自各自的论文。</figcaption>
+</figure>
+
+<figure>
+<table>
+<tr><th>方法</th><th>成功率 (%)</th><th>得分 (Score)</th></tr>
+<tr><td>Act (提示)</td><td>28.7</td><td>57.6</td></tr>
+<tr><td><strong>ReAct (提示) (ours)</strong></td><td><strong>38.3</strong></td><td><strong>63.3</strong></td></tr>
+<tr><td>模仿学习 (IL)</td><td>28.0</td><td>57.5</td></tr>
+<tr><td>强化学习 (RL)</td><td>29.0</td><td>59.1</td></tr>
+<tr><td>模仿学习 + 强化学习 (IL+RL)</td><td>35.0</td><td>62.4</td></tr>
+</table>
+<figcaption><strong>表 4:</strong> WebShop 结果。ReAct 使用两个上下文示例进行提示。基线结果来自 Yao et al. (2022)。</figcaption>
+</figure>
+
+<h4>关于内部推理与外部反馈的价值</h4>
+<p>为了更好地理解推理（通过内部语言思维）和外部反馈（通过环境观察）对决策过程的各自贡献，我们在 ALFWorld 上进行了消融研究。我们比较了：Act（无推理，无外部反馈）、ReAct-IM（通过观察进行外部反馈，但无内部推理）、Act + CoT（先推理后行动：在每一步，模型先产生一个思维，然后产生一个行动，但不接收观察或环境反馈）以及 ReAct（推理+外部反馈）。表 5 显示了结果。缺少外部反馈（Act + CoT）严重损害了性能，因为模型只能猜测其行动结果，很快变得不现实（类似"幻觉"的错误）。相比之下，缺少内部推理（ReAct-IM-）会导致模型成为被动的反馈处理器，只能从环境中获取信息，缺乏战略性规划的能力。最后，ReAct 同时结合了这两者并达到了最佳效果，展示了内部推理和外部反馈在交互式决策中互补而重要的作用。</p>
+
+<figure>
+<table>
+<tr><th>方法</th><th>成功率 (%)</th></tr>
+<tr><td>Act (仅行动)</td><td>45</td></tr>
+<tr><td>Act + CoT (推理但不接收反馈)</td><td>10</td></tr>
+<tr><td>ReAct-IM (外部反馈但无内部推理)</td><td>55</td></tr>
+<tr><td><strong>ReAct (推理+外部反馈)</strong></td><td><strong>67</strong></td></tr>
+</table>
+<figcaption><strong>表 5:</strong> ALFWorld 上的消融研究：内部推理与外部反馈的贡献。</figcaption>
+</figure>
+
+<hr>
+
+<h2>5 相关工作 (Related Work)</h2>
+
+<h4>用于推理的语言模型 (Language model for reasoning)</h4>
+<p>或许最著名的使用 LLM 进行推理的工作是思维链（CoT, Wei et al., 2022），它揭示了 LLM 能够形成自己的"思考过程"来解决问题。此后出现了几项后续工作，包括用于解决复杂任务的最少到最多提示（least-to-most prompting, Zhou et al., 2022）、零样本 CoT（zero-shot-CoT, Kojima et al., 2022）以及自一致性推理（reasoning with self-consistency, Wang et al., 2022a）。最近，Madaan & Yazdanbakhsh (2022) 系统地研究了 CoT 的制定和结构，观察到符号、模式和文本的存在对 CoT 的有效性至关重要。</p>
+<p>其他工作也已扩展到超越简单提示的更复杂的推理架构。例如，选择-推理（Selection-Inference, Creswell et al., 2022）将推理过程分为"选择"和"推理"两步。STaR (Zelikman et al., 2022) 通过在模型自身生成的正确理由上微调模型来自举推理过程。忠实推理（Faithful reasoning, Creswell & Shanahan, 2022）将多步推理分解为三个步骤，每步由专门的 LM 执行。类似的方法如 Scratchpad (Nye et al., 2021) 在中间计算步骤上微调 LM，也展示了在多步计算问题上的改进。与这些方法相比，ReAct 执行的不仅仅是孤立的、固定的推理，而是将模型的行动及其相应的观察整合成一个连贯的输入流，使模型能够更准确地推理并解决超出推理范围的任务（例如交互式决策）。</p>
+
+<h4>用于决策的语言模型 (Language model for decision making)</h4>
+<p>LLM 的强大能力使其能够执行超出语言生成的任务，利用 LLM 作为决策的策略模型越来越受欢迎，特别是在交互式环境中。WebGPT (Nakano et al., 2021) 使用 LM 与网络浏览器交互、浏览网页，并从 ELI5 (Fan et al., 2019) 中推断复杂问题的答案。与 ReAct 相比，WebGPT 没有显式建模思考和推理过程，而是依赖昂贵的人类反馈进行强化学习。在对话建模中，像 BlenderBot (Shuster et al., 2022b) 和 Sparrow (Glaese et al., 2022) 这样的聊天机器人以及像 SimpleTOD (Hosseini-Asl et al., 2020) 这样的任务导向对话系统也训练 LM 来做出关于 API 调用的决策。与 ReAct 不同，它们也没有显式考虑推理过程，并且依赖昂贵的数据集和人类反馈收集来进行策略学习。相比之下，ReAct 以更便宜的方式学习策略，因为决策过程只需要推理过程的语言描述<sup><a href="#fn6">6</a></sup>。</p>
+<p>LLM 也越来越多地被用于交互式和具身环境中的规划和决策。在这方面与 ReAct 最相关的工作可能是 SayCan (Ahn et al., 2022) 和 Inner Monologue (Huang et al., 2022b)，它们使用 LLM 进行机器人行动规划和决策。在 SayCan 中，LLM 被提示直接预测机器人可能采取的行动，然后由基于视觉环境的可负担性模型（affordance model）重新排序以进行最终预测。Inner Monologue 通过添加同名的"内部独白"（inner monologue）做了进一步改进，该独白实现为从环境注入的反馈。据我们所知，Inner Monologue 是首个展示这种闭环系统的工作，ReAct 在此基础上进行了构建。然而，我们认为 Inner Monologue 并不真正包含内部思维——这将在第 4 节中阐述。我们还注意到，在交互式决策过程中利用语言作为语义丰富的输入已被证明在其他设置下也是成功的（Abramson et al., 2020; Karamcheti et al., 2021; Huang et al., 2022a; Li et al., 2022）。越来越明显的是，在 LLM 的帮助下，语言作为一种基本的认知机制将在交互和决策中发挥关键作用。此外，LLM 的进展也激发了像 Reed et al. (2022) 这样的多功能通用智能体的发展。</p>
+
+<hr>
+
+<h2>6 结论 (Conclusion)</h2>
+
+<p>我们提出了 <strong>ReAct</strong>——一种简单而有效的方法，用于在大型语言模型中协同推理和行动。通过在多跳问答、事实核查和交互式决策任务上的多样化实验，我们展示了 ReAct 以可解释的决策轨迹取得了优越的性能。尽管我们的方法很简单，但具有大行动空间的复杂任务需要更多的演示来学习，这不幸地很容易超出上下文学习（in-context learning）的输入长度限制。我们探索了在 HotpotQA 上的微调方法，并取得了初步的有希望的结果，但从更高质量的人工标注中学习将是进一步提高性能的必要条件。将 ReAct 扩展到多任务训练并与其-他互补范式（如强化学习）相结合，可以产生更强的智能体，进一步释放 LLM 在更多应用中的潜力。</p>
+
+<h4>致谢 (Acknowledgments)</h4>
+<p>我们感谢 Cohere For AI、Google Research 和 Princeton University 对这项研究的支持。我们感谢 Graham Neubig、William S. Moses、Ofir Press、Rishabh Agarwal、Zhengxuan Wu、Alex Tamkin、Ofir Nachum、Andreas Kirsch 以及我们的匿名审稿人的有益讨论和反馈。</p>
+
+<h4>可复现性声明 (Reproducibility Statement)</h4>
+<p>我们所有的实验都基于公开发布的标准数据集进行，我们提供使用的提示示例（附录 C）、模型生成轨迹示例（附录 D）和实验设置细节（附录 B）。我们的提示示例可以直接复制以重现少样本结果。源代码可在 https://react-lm.github.io 获取。</p>
+
+<h4>伦理声明 (Ethics Statement)</h4>
+<p>我们的工作利用大型语言模型的推理能力来增强交互式决策。我们主要在合成或受控环境中实验，我们认识到这些方法在现实世界中的部署可能会带来风险（例如，使用搜索引擎检索知识时可能存在偏见信息）。我们提倡在任何高风险应用中谨慎部署，并结合适当的人机交互和监督。</p>
+
+<hr>
+
+<h2>参考文献 (References)</h2>
+
+<ol>
+<li>Abramson, J., Ahuja, A., Brussee, J., et al. (2020). Imitating interactive intelligence. <em>arXiv preprint arXiv:2012.05672</em>.</li>
+<li>Ahn, M., Brohan, A., Brown, N., et al. (2022). Do as I can, not as I say: Grounding language in robotic affordances. <em>arXiv preprint arXiv:2204.01691</em>.</li>
+<li>Alderson-Day, B. & Fernyhough, C. (2015). Inner speech: Development, cognitive functions, phenomenology, and neurobiology. <em>Psychological Bulletin</em>, 141(5):931.</li>
+<li>Baddeley, A. (1992). Working memory. <em>Science</em>, 255(5044):556–559.</li>
+<li>Brown, T., Mann, B., Ryder, N., et al. (2020). Language models are few-shot learners. In <em>NeurIPS</em>.</li>
+<li>Chowdhery, A., Narang, S., Devlin, J., et al. (2022). PaLM: Scaling language modeling with pathways. <em>arXiv preprint arXiv:2204.02311</em>.</li>
+<li>Creswell, A. & Shanahan, M. (2022). Faithful reasoning using large language models. <em>arXiv preprint arXiv:2208.14271</em>.</li>
+<li>Creswell, A., Shanahan, M., & Higgins, I. (2022). Selection-inference: Exploiting large language models for interpretable logical reasoning. In <em>ICLR</em>.</li>
+<li>Fan, A., Jernite, Y., Perez, E., et al. (2019). ELI5: Long form question answering. In <em>ACL</em>.</li>
+<li>Fernyhough, C. (2010). Vygotsky, Luria, and the social brain. In <em>Voice of the Mind</em>, pp. 55–77.</li>
+<li>Glaese, A., McAleese, N., Trębacz, M., et al. (2022). Improving alignment of dialogue agents via targeted human judgements. <em>arXiv preprint arXiv:2209.14375</em>.</li>
+<li>Hosseini-Asl, E., McCann, B., Wu, C.-S., Yavuz, S., & Socher, R. (2020). A simple language model for task-oriented dialogue. <em>NeurIPS</em>.</li>
+<li>Huang, W., Abbeel, P., Pathak, D., & Mordatch, I. (2022a). Language models as zero-shot planners: Extracting actionable knowledge for embodied agents. In <em>ICML</em>.</li>
+<li>Huang, W., Xia, F., Xiao, T., et al. (2022b). Inner monologue: Embodied reasoning through planning with language models. In <em>CoRL</em>.</li>
+<li>Karamcheti, S., Satheesh, S., Sadigh, D., & Bohg, J. (2021). Learning to be where you are: A closer look at language as a independently learned skill for instruction following. In <em>CoRL</em>.</li>
+<li>Kojima, T., Gu, S. S., Reid, M., Matsuo, Y., & Iwasawa, Y. (2022). Large language models are zero-shot reasoners. In <em>NeurIPS</em>.</li>
+<li>Lewis, P., Perez, E., Piktus, A., et al. (2020). Retrieval-augmented generation for knowledge-intensive NLP tasks. In <em>NeurIPS</em>.</li>
+<li>Li, S., Puig, X., Paxton, C., et al. (2022). Pre-trained language models for interactive decision-making. In <em>NeurIPS</em>.</li>
+<li>Luria, A. R. (1965). L. S. Vygotsky and the problem of localization of functions. <em>Neuropsychologia</em>, 3(4):387–392.</li>
+<li>Madaan, A. & Yazdanbakhsh, A. (2022). Text and patterns: For effective chain of thought, it takes two to tango. <em>arXiv preprint arXiv:2209.07686</em>.</li>
+<li>Nakano, R., Hilton, J., Balaji, S., et al. (2021). WebGPT: Browser-assisted question-answering with human feedback. <em>arXiv preprint arXiv:2112.09332</em>.</li>
+<li>Nye, M., Andreassen, A. J., Gur-Ari, G., et al. (2021). Show your work: Scratchpads for intermediate computation with language models. <em>arXiv preprint arXiv:2112.00114</em>.</li>
+<li>Reed, S., Zolna, K., Parisotto, E., et al. (2022). A generalist agent. <em>Transactions on Machine Learning Research</em>.</li>
+<li>Shridhar, M., Thomason, J., Gordon, D., et al. (2020a). ALFRED: A benchmark for interpreting grounded instructions for everyday tasks. In <em>CVPR</em>.</li>
+<li>Shridhar, M., Yuan, X., Côté, M.-A., et al. (2020b). ALFWorld: Aligning text and embodied environments for interactive learning. In <em>ICLR</em>.</li>
+<li>Shuster, K., Xu, J., Komelli, M., et al. (2022b). BlenderBot 3: A deployed conversational agent that continually learns to responsibly engage. <em>arXiv preprint arXiv:2208.03188</em>.</li>
+<li>Thorne, J., Vlachos, A., Christodoulopoulos, C., & Mittal, A. (2018). FEVER: A large-scale dataset for fact extraction and verification. In <em>NAACL-HLT</em>.</li>
+<li>Vygotsky, L. S. (1987). Thinking and speech. In <em>The Collected Works of L. S. Vygotsky</em>, Vol. 1, pp. 39–285.</li>
+<li>Wang, X., Wei, J., Schuurmans, D., et al. (2022a). Self-consistency improves chain of thought reasoning in language models. In <em>ICLR</em>.</li>
+<li>Wei, J., Wang, X., Schuurmans, D., et al. (2022). Chain-of-thought prompting elicits reasoning in large language models. In <em>NeurIPS</em>.</li>
+<li>Yang, Z., Qi, P., Zhang, S., et al. (2018). HotpotQA: A dataset for diverse, explainable multi-hop question answering. In <em>EMNLP</em>.</li>
+<li>Yao, S., Howard, A., Chen, W., et al. (2022). WebShop: Towards scalable real-world web interaction with grounded language agents. In <em>NeurIPS</em>.</li>
+<li>Yao, S., Rao, R., Hausknecht, M., & Narasimhan, K. (2020). Keep calm and simulate: Language models for text-based planning. In <em>EMNLP</em>.</li>
+<li>Zelikman, E., Wu, Y., Mu, J., & Goodman, N. (2022). STaR: Bootstrapping reasoning with reasoning. In <em>NeurIPS</em>.</li>
+<li>Zhong, V., Mu, J., Zettlemoyer, L., Grefenstette, E., & Rocktäschel, T. (2021). Improving policy learning via language dynamics distillation. In <em>NeurIPS</em>.</li>
+<li>Zhou, D., Schärli, N., Hou, L., et al. (2022). Least-to-most prompting enables complex reasoning in large language models. In <em>ICLR</em>.</li>
+<li>Zhu, F., Lei, W., Wang, C., Zheng, J., Huang, S., & Chua, T.-S. (2021). Retrieving and reading: A comprehensive survey on open-domain question answering. <em>arXiv preprint arXiv:2101.00774</em>.</li>
+</ol>
+
+<hr>
+
+<h2>脚注 (Footnotes)</h2>
+<p id="fn1"><sup>1</sup> 我们在附录 A.1 中展示了一些 GPT-3 (Brown et al., 2020) 的结果，这些结果优于 PaLM-540B。</p>
+<p id="fn2"><sup>2</sup> 我们发现更多示例不会提高性能。</p>
+<p id="fn3"><sup>3</sup> 在所有具有正确答案的轨迹中，HotpotQA 上 7 步和 FEVER 上 5 步的轨迹分别仅占 0.84% 和 1.33%。</p>
+<p id="fn4"><sup>4</sup> HotpotQA EM: Standard 27.1, CoT 28.9, CoT-SC 33.8 (Wang et al., 2022b). 有监督 SOTA 来自 Zhu et al. (2021); Lewis et al. (2020)。</p>
+<p id="fn5"><sup>5</sup> 我们怀疑这可能是由于次优的贪心解码过程，未来使用更好的解码（如束搜索）的工作可能有助于解决这个问题。</p>
+<p id="fn6"><sup>6</sup> 人类反馈也可以以互补的方式整合，但我们将其留作未来工作。</p>
+  </div>
+</div>
+<script>function ts(id){var e=document.getElementById(id),t=e.previousElementSibling;e.classList.contains("collapsed")?(e.classList.remove("collapsed"),t.classList.remove("collapsed")):(e.classList.add("collapsed"),t.classList.add("collapsed"))}function toggleAll(v){document.querySelectorAll(".sidebar-section-content").forEach(function(e){v?e.classList.remove("collapsed"):e.classList.add("collapsed")});document.querySelectorAll(".sidebar-section-title").forEach(function(e){v?e.classList.remove("collapsed"):e.classList.add("collapsed")})}</script>
+</body>
+</html>
